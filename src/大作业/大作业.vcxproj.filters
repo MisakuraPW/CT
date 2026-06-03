@@ -66,6 +66,12 @@
     <ClInclude Include="MetricsCalculator.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="InfectionAnalyzer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CsvExporter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="大作业.cpp">
@@ -108,6 +114,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="MetricsCalculator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="InfectionAnalyzer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CsvExporter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -198,7 +198,9 @@
     <ClInclude Include="ClassView.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="CsvExporter.h" />
     <ClInclude Include="ImageIO.h" />
+    <ClInclude Include="InfectionAnalyzer.h" />
     <ClInclude Include="LungSegmenter.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MetricsCalculator.h" />
@@ -216,7 +218,9 @@
     <ClCompile Include="ChildFrm.cpp" />
     <ClCompile Include="ClassView.cpp" />
     <ClCompile Include="FileView.cpp" />
+    <ClCompile Include="CsvExporter.cpp" />
     <ClCompile Include="ImageIO.cpp" />
+    <ClCompile Include="InfectionAnalyzer.cpp" />
     <ClCompile Include="LungSegmenter.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MetricsCalculator.cpp" />

@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "InfectionAnalyzer.h"
 #include "LungSegmenter.h"
 #include "MetricsCalculator.h"
 
@@ -18,7 +19,9 @@ enum class DisplayImageKind
 	Connected,
 	Morphology,
 	FinalMask,
-	ManualMask
+	ManualMask,
+	InfectionMask,
+	InfectionOverlay
 };
 
 class C大作业Doc : public CDocument
@@ -37,6 +40,9 @@ public:
 	BOOL HasOriginalImage() const;
 	BOOL HasFinalMask() const;
 	BOOL HasManualMask() const;
+	BOOL HasInfectionMask() const;
+	BOOL HasMetrics() const;
+	BOOL HasInfectionStats() const;
 
 // 重写
 public:
@@ -59,24 +65,36 @@ public:
 protected:
 	cv::Mat m_originalImage;
 	cv::Mat m_manualMask;
+	cv::Mat m_infectionMask;
+	cv::Mat m_infectionOverlay;
 	LungSegmentationResult m_segmentationResult;
 	DisplayImageKind m_displayKind = DisplayImageKind::Original;
 	CString m_sourcePath;
 	CString m_manualMaskPath;
+	CString m_infectionMaskPath;
 	SegmentationMetrics m_lastMetrics;
+	InfectionStats m_lastInfectionStats;
+	BOOL m_hasMetrics = FALSE;
+	BOOL m_hasInfectionStats = FALSE;
 
 	BOOL LoadSourceImage(const CString& pathName);
 	BOOL LoadManualMask(const CString& pathName);
+	BOOL LoadInfectionMask(const CString& pathName);
 	void ClearImages();
 	void SetDisplayKind(DisplayImageKind kind);
 	cv::Mat CurrentSaveImage() const;
+	CString GetSourceFileName() const;
 
 // 生成的消息映射函数
 protected:
 	afx_msg void OnOpenManualMask();
+	afx_msg void OnOpenInfectionMask();
 	afx_msg void OnRunLungSegmentation();
 	afx_msg void OnCalculateMetrics();
+	afx_msg void OnAnalyzeInfectionBurden();
 	afx_msg void OnSaveCurrentResult();
+	afx_msg void OnExportMetricsCsv();
+	afx_msg void OnExportInfectionCsv();
 	afx_msg void OnShowOriginal();
 	afx_msg void OnShowGray();
 	afx_msg void OnShowThreshold();
@@ -84,10 +102,16 @@ protected:
 	afx_msg void OnShowMorphology();
 	afx_msg void OnShowFinalMask();
 	afx_msg void OnShowManualMask();
+	afx_msg void OnShowInfectionMask();
+	afx_msg void OnShowInfectionOverlay();
 	afx_msg void OnUpdateHasOriginal(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasSegmentation(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasFinalAndMask(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasManualMask(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasInfectionMask(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasFinalAndInfection(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasMetrics(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasInfectionStats(CCmdUI* pCmdUI);
 	DECLARE_MESSAGE_MAP()
 
 #ifdef SHARED_HANDLERS

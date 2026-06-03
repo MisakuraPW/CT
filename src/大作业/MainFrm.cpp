@@ -165,9 +165,13 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	lstBasicCommands.AddTail(ID_FILE_OPEN);
 	lstBasicCommands.AddTail(ID_FILE_SAVE);
 	lstBasicCommands.AddTail(ID_IMAGE_OPEN_MASK);
+	lstBasicCommands.AddTail(ID_IMAGE_OPEN_INFECTION_MASK);
 	lstBasicCommands.AddTail(ID_RESULT_SAVE_CURRENT);
+	lstBasicCommands.AddTail(ID_RESULT_EXPORT_METRICS_CSV);
+	lstBasicCommands.AddTail(ID_RESULT_EXPORT_INFECTION_CSV);
 	lstBasicCommands.AddTail(ID_PROCESS_RUN_SEGMENTATION);
 	lstBasicCommands.AddTail(ID_ANALYSIS_CALCULATE_METRICS);
+	lstBasicCommands.AddTail(ID_ANALYSIS_INFECTION_BURDEN);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_ORIGINAL);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_GRAY);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_THRESHOLD);
@@ -175,6 +179,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_MORPHOLOGY);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_FINAL_MASK);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_MANUAL_MASK);
+	lstBasicCommands.AddTail(ID_VIEW_SHOW_INFECTION_MASK);
+	lstBasicCommands.AddTail(ID_VIEW_SHOW_INFECTION_OVERLAY);
 	lstBasicCommands.AddTail(ID_FILE_PRINT);
 	lstBasicCommands.AddTail(ID_APP_EXIT);
 	lstBasicCommands.AddTail(ID_EDIT_CUT);
