@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    Copy this file to configs/opencv.local.props and edit the values below.
+    The local file is ignored by Git.
+
+    Common OpenCV Windows layout:
+      C:\opencv\build\include
+      C:\opencv\build\x64\vc17\lib
+      C:\opencv\build\x64\vc17\bin
+
+    If your OpenCV package uses vc16, vc17, vc18, or separate module libs,
+    update OpenCVLibDir and AdditionalDependencies accordingly.
+  -->
+  <PropertyGroup Label="UserMacros">
+    <OpenCVRoot>C:\opencv\build</OpenCVRoot>
+    <OpenCVLibDir>$(OpenCVRoot)\x64\vc17\lib</OpenCVLibDir>
+    <OpenCVDllDir>$(OpenCVRoot)\x64\vc17\bin</OpenCVDllDir>
+    <OpenCVWorldVersion>4100</OpenCVWorldVersion>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(OpenCVRoot)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(OpenCVLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <Link>
+      <AdditionalDependencies>opencv_world$(OpenCVWorldVersion)d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <Link>
+      <AdditionalDependencies>opencv_world$(OpenCVWorldVersion).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <PropertyGroup>
+    <LocalDebuggerEnvironment>PATH=$(OpenCVDllDir);%PATH%</LocalDebuggerEnvironment>
+  </PropertyGroup>
+</Project>

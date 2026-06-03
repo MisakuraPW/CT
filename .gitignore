@@ -1,0 +1,64 @@
+# Visual Studio / MFC
+.vs/
+ipch/
+x64/
+x86/
+Win32/
+Debug/
+Release/
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+*.opendb
+*.db-shm
+*.db-wal
+*.obj
+*.pch
+*.pdb
+*.idb
+*.ilk
+*.tlog
+*.lastbuildstate
+*.recipe
+*.log
+
+# Local config
+configs/paths.local.ini
+configs/*.local.props
+
+# Datasets
+data/
+dataset/
+datasets/
+*.dcm
+*.nii
+*.nii.gz
+*.mhd
+*.raw
+*.zraw
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+
+# Outputs
+results/**
+!results/
+!results/.gitkeep
+outputs/
+logs/
+
+# Temporary files
+*.tmp
+*.cache
+*.bak
+*.orig
+
+# IDEs
+.idea/
+.vscode/
