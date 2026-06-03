@@ -57,6 +57,15 @@
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="ImageIO.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LungSegmenter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MetricsCalculator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="大作业.cpp">
@@ -90,6 +99,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageIO.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LungSegmenter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MetricsCalculator.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

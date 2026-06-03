@@ -164,6 +164,17 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	lstBasicCommands.AddTail(ID_FILE_NEW);
 	lstBasicCommands.AddTail(ID_FILE_OPEN);
 	lstBasicCommands.AddTail(ID_FILE_SAVE);
+	lstBasicCommands.AddTail(ID_IMAGE_OPEN_MASK);
+	lstBasicCommands.AddTail(ID_RESULT_SAVE_CURRENT);
+	lstBasicCommands.AddTail(ID_PROCESS_RUN_SEGMENTATION);
+	lstBasicCommands.AddTail(ID_ANALYSIS_CALCULATE_METRICS);
+	lstBasicCommands.AddTail(ID_VIEW_SHOW_ORIGINAL);
+	lstBasicCommands.AddTail(ID_VIEW_SHOW_GRAY);
+	lstBasicCommands.AddTail(ID_VIEW_SHOW_THRESHOLD);
+	lstBasicCommands.AddTail(ID_VIEW_SHOW_CONNECTED);
+	lstBasicCommands.AddTail(ID_VIEW_SHOW_MORPHOLOGY);
+	lstBasicCommands.AddTail(ID_VIEW_SHOW_FINAL_MASK);
+	lstBasicCommands.AddTail(ID_VIEW_SHOW_MANUAL_MASK);
 	lstBasicCommands.AddTail(ID_FILE_PRINT);
 	lstBasicCommands.AddTail(ID_APP_EXIT);
 	lstBasicCommands.AddTail(ID_EDIT_CUT);
