@@ -85,6 +85,33 @@ void WriteCsvField(std::ofstream& file, const CString& value)
 	const CStringA utf8(CW2A(escaped, CP_UTF8));
 	file.write(utf8.GetString(), utf8.GetLength());
 }
+
+bool ReportDatasetProgress(
+	const DatasetBatchOptions& options,
+	const CString& scopeName,
+	const CString& itemName,
+	int current,
+	int total,
+	CString& errorMessage)
+{
+	if (!options.progressCallback)
+	{
+		return true;
+	}
+
+	BatchProgressInfo info;
+	info.scopeName = scopeName;
+	info.itemName = itemName;
+	info.current = current;
+	info.total = total;
+	if (!options.progressCallback(info))
+	{
+		errorMessage = _T("用户已取消数据集批处理。");
+		return false;
+	}
+
+	return true;
+}
 }
 
 bool CDatasetBatchRunner::Run(
@@ -113,14 +140,32 @@ bool CDatasetBatchRunner::Run(
 	rows.reserve(scanResult.cases.size());
 
 	summary.totalCases = static_cast<int>(scanResult.cases.size());
-
-	for (const DatasetCase& item : scanResult.cases)
+	if (!ReportDatasetProgress(options, _T("数据集病例"), _T("准备处理"), 0, summary.totalCases, errorMessage))
 	{
+		return false;
+	}
+
+	for (size_t caseIndex = 0; caseIndex < scanResult.cases.size(); ++caseIndex)
+	{
+		const DatasetCase& item = scanResult.cases[caseIndex];
 		CaseRunRow row;
 		row.datasetKind = CDatasetScanner::KindToDisplayName(item.kind);
 		row.caseId = item.caseId;
 		row.imagePath = item.imagePath;
 		row.outputRoot = BuildCaseOutputRoot(options.outputRoot, item);
+
+		CString progressName;
+		progressName.Format(_T("%s / %s"), row.datasetKind.GetString(), row.caseId.GetString());
+		if (!ReportDatasetProgress(
+			options,
+			_T("数据集病例"),
+			progressName,
+			static_cast<int>(caseIndex),
+			summary.totalCases,
+			errorMessage))
+		{
+			return false;
+		}
 
 		if (!EnsureDirectory(row.outputRoot))
 		{
@@ -150,10 +195,33 @@ bool CDatasetBatchRunner::Run(
 		batchOptions.caseName = item.caseId;
 		batchOptions.saveIntermediate = options.saveIntermediate;
 		batchOptions.segmentationOptions = options.segmentationOptions;
+		bool caseCanceled = false;
+		batchOptions.progressCallback = [&](const BatchProgressInfo& info) {
+			if (!options.progressCallback)
+			{
+				return true;
+			}
+
+			BatchProgressInfo merged = info;
+			merged.scopeName.Format(
+				_T("病例 %d/%d - %s"),
+				static_cast<int>(caseIndex + 1),
+				summary.totalCases,
+				info.scopeName.GetString());
+			merged.itemName = progressName;
+			caseCanceled = !options.progressCallback(merged);
+			return !caseCanceled;
+		};
 
 		BatchProcessResult batchResult;
 		if (!processor.ProcessSlices(sourceSlices, lungMaskSlices, infectionMaskSlices, batchOptions, batchResult, caseError))
 		{
+			if (caseCanceled)
+			{
+				errorMessage = _T("用户已取消数据集批处理。");
+				return false;
+			}
+
 			row.status = _T("failed");
 			row.errorMessage = caseError;
 			rows.push_back(row);
@@ -172,6 +240,17 @@ bool CDatasetBatchRunner::Run(
 
 		++summary.succeededCases;
 		summary.totalSlices += batchResult.totalSlices;
+
+		if (!ReportDatasetProgress(
+			options,
+			_T("数据集病例"),
+			progressName,
+			static_cast<int>(caseIndex + 1),
+			summary.totalCases,
+			errorMessage))
+		{
+			return false;
+		}
 	}
 
 	const CString summaryPath = JoinPath(options.outputRoot, _T("dataset_summary.csv"));

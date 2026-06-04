@@ -197,6 +197,7 @@
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="ClassView.h" />
     <ClInclude Include="AppConfig.h" />
+    <ClInclude Include="BatchProgressDialog.h" />
     <ClInclude Include="BatchProcessor.h" />
     <ClInclude Include="DatasetBatchRunner.h" />
     <ClInclude Include="DatasetScanner.h" />
@@ -227,6 +228,7 @@
     <ClCompile Include="ChildFrm.cpp" />
     <ClCompile Include="ClassView.cpp" />
     <ClCompile Include="AppConfig.cpp" />
+    <ClCompile Include="BatchProgressDialog.cpp" />
     <ClCompile Include="BatchProcessor.cpp" />
     <ClCompile Include="DatasetBatchRunner.cpp" />
     <ClCompile Include="DatasetScanner.cpp" />

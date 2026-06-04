@@ -81,6 +81,9 @@
     <ClInclude Include="AppConfig.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BatchProgressDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="DatasetScanner.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -156,6 +159,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="AppConfig.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BatchProgressDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="DatasetScanner.cpp">
