@@ -13,6 +13,7 @@
 #include "大作业Doc.h"
 #include "大作业View.h"
 #include "AppConfig.h"
+#include "DatasetBatchRunner.h"
 #include "DatasetScanner.h"
 
 #ifdef _DEBUG
@@ -28,6 +29,7 @@ BEGIN_MESSAGE_MAP(C大作业App, CWinAppEx)
 	ON_COMMAND(ID_FILE_NEW, &CWinAppEx::OnFileNew)
 	ON_COMMAND(ID_FILE_OPEN, &C大作业App::OnFileOpen)
 	ON_COMMAND(ID_DATASET_SCAN_TASKS, &C大作业App::OnDatasetScanTasks)
+	ON_COMMAND(ID_DATASET_PROCESS_CONFIGURED, &C大作业App::OnDatasetProcessConfigured)
 	// 标准打印设置命令
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
 END_MESSAGE_MAP()
@@ -258,6 +260,73 @@ void C大作业App::OnDatasetScanTasks()
 		result.missingMaskCount,
 		outputPath.GetString());
 	AfxMessageBox(summary, MB_ICONINFORMATION);
+}
+
+void C大作业App::OnDatasetProcessConfigured()
+{
+	AppConfig config;
+	CString errorMessage;
+	if (!CAppConfigLoader::LoadDefault(config, errorMessage))
+	{
+		AfxMessageBox(errorMessage, MB_ICONWARNING);
+		return;
+	}
+
+	CDatasetScanner scanner;
+	DatasetScanResult scanResult;
+	if (!scanner.Scan(config.lungDatasetRoot, config.covidDatasetRoot, scanResult, errorMessage))
+	{
+		AfxMessageBox(errorMessage, MB_ICONWARNING);
+		return;
+	}
+
+	CString confirm;
+	confirm.Format(
+		_T("即将处理配置中的全部数据集任务。\n\nFinding Lungs 2D: %d\nFinding Lungs 3D: %d\nCOVID-19 CT: %d\n\n处理过程可能需要较长时间，期间窗口会暂时无响应。是否继续？"),
+		scanResult.finding2DCount,
+		scanResult.finding3DCount,
+		scanResult.covidCount);
+	if (AfxMessageBox(confirm, MB_YESNO | MB_ICONQUESTION) != IDYES)
+	{
+		return;
+	}
+
+	CString outputRoot = config.resultRoot;
+	outputRoot.Replace(_T('/'), _T('\\'));
+	if (!outputRoot.IsEmpty())
+	{
+		const TCHAR tail = outputRoot[outputRoot.GetLength() - 1];
+		if (tail != _T('\\'))
+		{
+			outputRoot += _T("\\");
+		}
+	}
+	outputRoot += _T("datasets");
+
+	DatasetBatchOptions options;
+	options.outputRoot = outputRoot;
+	options.saveIntermediate = config.saveIntermediate;
+
+	DatasetBatchSummary summary;
+	CDatasetBatchRunner runner;
+	{
+		CWaitCursor wait;
+		if (!runner.Run(scanResult, options, summary, errorMessage))
+		{
+			AfxMessageBox(errorMessage, MB_ICONERROR);
+			return;
+		}
+	}
+
+	CString message;
+	message.Format(
+		_T("数据集批处理完成。\n\n病例总数: %d\n成功: %d\n失败: %d\n切片总数: %d\n\n汇总表：\n%s"),
+		summary.totalCases,
+		summary.succeededCases,
+		summary.failedCases,
+		summary.totalSlices,
+		summary.summaryCsvPath.GetString());
+	AfxMessageBox(message, summary.failedCases > 0 ? MB_ICONWARNING : MB_ICONINFORMATION);
 }
 
 // C大作业App 自定义加载/保存方法

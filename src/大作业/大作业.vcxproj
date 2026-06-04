@@ -198,6 +198,7 @@
     <ClInclude Include="ClassView.h" />
     <ClInclude Include="AppConfig.h" />
     <ClInclude Include="BatchProcessor.h" />
+    <ClInclude Include="DatasetBatchRunner.h" />
     <ClInclude Include="DatasetScanner.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
@@ -223,6 +224,7 @@
     <ClCompile Include="ClassView.cpp" />
     <ClCompile Include="AppConfig.cpp" />
     <ClCompile Include="BatchProcessor.cpp" />
+    <ClCompile Include="DatasetBatchRunner.cpp" />
     <ClCompile Include="DatasetScanner.cpp" />
     <ClCompile Include="FileView.cpp" />
     <ClCompile Include="CsvExporter.cpp" />
