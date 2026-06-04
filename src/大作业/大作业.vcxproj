@@ -212,6 +212,7 @@
     <ClInclude Include="OverlayVisualizer.h" />
     <ClInclude Include="OutputWnd.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="ProcessingOptions.h" />
     <ClInclude Include="Preprocessor.h" />
     <ClInclude Include="PropertiesWnd.h" />
     <ClInclude Include="Resource.h" />

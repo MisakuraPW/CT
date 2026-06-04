@@ -74,7 +74,7 @@ bool CBatchProcessor::ProcessSlices(
             continue;
         }
 
-        const LungSegmentationResult segmentation = segmenter.Segment(sourceSlices[i]);
+        const LungSegmentationResult segmentation = segmenter.Segment(sourceSlices[i], options.segmentationOptions);
         if (segmentation.finalMask.empty())
         {
             continue;

@@ -12,6 +12,7 @@
 
 #include "大作业Doc.h"
 
+#include "AppConfig.h"
 #include "BatchProcessor.h"
 #include "CsvExporter.h"
 #include "ImageIO.h"
@@ -30,6 +31,14 @@
 
 namespace
 {
+	AppConfig LoadConfigOrDefaults()
+	{
+		AppConfig config;
+		CString ignoredError;
+		CAppConfigLoader::LoadDefault(config, ignoredError);
+		return config;
+	}
+
 	cv::Mat NormalizeBinaryMaskForDoc(const cv::Mat& mask)
 	{
 		if (mask.empty())
@@ -689,8 +698,9 @@ void C大作业Doc::OnRunLungSegmentation()
 	}
 
 	CWaitCursor wait;
+	const AppConfig config = LoadConfigOrDefaults();
 	CLungSegmenter segmenter;
-	m_segmentationResult = segmenter.Segment(m_originalImage);
+	m_segmentationResult = segmenter.Segment(m_originalImage, config.segmentation);
 	if (m_segmentationResult.finalMask.empty())
 	{
 		AfxMessageBox(_T("肺部分割失败。"));
@@ -852,8 +862,9 @@ void C大作业Doc::OnPreprocessGrayNormalize()
 
 void C大作业Doc::OnPreprocessLungWindow()
 {
+	const AppConfig config = LoadConfigOrDefaults();
 	CPreprocessor preprocessor;
-	m_lungWindowImage = preprocessor.ApplyLungWindow(m_originalImage);
+	m_lungWindowImage = preprocessor.ApplyWindow(m_originalImage, config.preprocessing.lungWindowLevel, config.preprocessing.lungWindowWidth);
 	if (m_lungWindowImage.empty())
 	{
 		AfxMessageBox(_T("肺窗处理失败。"));
@@ -864,8 +875,9 @@ void C大作业Doc::OnPreprocessLungWindow()
 
 void C大作业Doc::OnPreprocessGaussian()
 {
+	const AppConfig config = LoadConfigOrDefaults();
 	CPreprocessor preprocessor;
-	m_gaussianImage = preprocessor.ApplyGaussianBlur(m_originalImage, 5);
+	m_gaussianImage = preprocessor.ApplyGaussianBlur(m_originalImage, config.preprocessing.gaussianKernelSize);
 	if (m_gaussianImage.empty())
 	{
 		AfxMessageBox(_T("高斯滤波失败。"));
@@ -876,8 +888,9 @@ void C大作业Doc::OnPreprocessGaussian()
 
 void C大作业Doc::OnPreprocessMedian()
 {
+	const AppConfig config = LoadConfigOrDefaults();
 	CPreprocessor preprocessor;
-	m_medianImage = preprocessor.ApplyMedianBlur(m_originalImage, 5);
+	m_medianImage = preprocessor.ApplyMedianBlur(m_originalImage, config.preprocessing.medianKernelSize);
 	if (m_medianImage.empty())
 	{
 		AfxMessageBox(_T("中值滤波失败。"));
@@ -888,8 +901,12 @@ void C大作业Doc::OnPreprocessMedian()
 
 void C大作业Doc::OnPreprocessClahe()
 {
+	const AppConfig config = LoadConfigOrDefaults();
 	CPreprocessor preprocessor;
-	m_claheImage = preprocessor.ApplyClahe(m_originalImage, 2.0, cv::Size(8, 8));
+	m_claheImage = preprocessor.ApplyClahe(
+		m_originalImage,
+		config.preprocessing.claheClipLimit,
+		cv::Size(config.preprocessing.claheTileGridSize, config.preprocessing.claheTileGridSize));
 	if (m_claheImage.empty())
 	{
 		AfxMessageBox(_T("CLAHE 对比度增强失败。"));
@@ -1044,7 +1061,9 @@ void C大作业Doc::OnBatchProcessCurrentVolume()
 	BatchOptions options;
 	options.outputRoot = dlg.GetPathName().GetString();
 	options.caseName = GetSourceFileName();
-	options.saveIntermediate = true;
+	const AppConfig config = LoadConfigOrDefaults();
+	options.saveIntermediate = config.saveIntermediate;
+	options.segmentationOptions = config.segmentation;
 
 	CWaitCursor wait;
 	CBatchProcessor processor;

@@ -43,6 +43,21 @@ bool CAppConfigLoader::LoadDefault(AppConfig& config, CString& errorMessage)
 	saveIntermediate.Trim();
 	config.saveIntermediate = saveIntermediate.IsEmpty() || saveIntermediate != _T("0");
 
+	config.preprocessing.lungWindowLevel = ReadDoubleValue(iniPath, _T("preprocess"), _T("lung_window_level"), config.preprocessing.lungWindowLevel);
+	config.preprocessing.lungWindowWidth = ReadDoubleValue(iniPath, _T("preprocess"), _T("lung_window_width"), config.preprocessing.lungWindowWidth);
+	config.preprocessing.gaussianKernelSize = ReadIntValue(iniPath, _T("preprocess"), _T("gaussian_kernel_size"), config.preprocessing.gaussianKernelSize);
+	config.preprocessing.medianKernelSize = ReadIntValue(iniPath, _T("preprocess"), _T("median_kernel_size"), config.preprocessing.medianKernelSize);
+	config.preprocessing.claheClipLimit = ReadDoubleValue(iniPath, _T("preprocess"), _T("clahe_clip_limit"), config.preprocessing.claheClipLimit);
+	config.preprocessing.claheTileGridSize = ReadIntValue(iniPath, _T("preprocess"), _T("clahe_tile_grid_size"), config.preprocessing.claheTileGridSize);
+
+	config.segmentation.thresholdGaussianKernelSize = ReadIntValue(iniPath, _T("segmentation"), _T("threshold_gaussian_kernel_size"), config.segmentation.thresholdGaussianKernelSize);
+	config.segmentation.minComponentArea = ReadIntValue(iniPath, _T("segmentation"), _T("min_component_area"), config.segmentation.minComponentArea);
+	config.segmentation.minComponentAreaDivisor = ReadIntValue(iniPath, _T("segmentation"), _T("min_component_area_divisor"), config.segmentation.minComponentAreaDivisor);
+	config.segmentation.keepComponentCount = ReadIntValue(iniPath, _T("segmentation"), _T("keep_component_count"), config.segmentation.keepComponentCount);
+	config.segmentation.openKernelSize = ReadIntValue(iniPath, _T("segmentation"), _T("open_kernel_size"), config.segmentation.openKernelSize);
+	config.segmentation.closeKernelSize = ReadIntValue(iniPath, _T("segmentation"), _T("close_kernel_size"), config.segmentation.closeKernelSize);
+	config.segmentation.morphologyIterations = ReadIntValue(iniPath, _T("segmentation"), _T("morphology_iterations"), config.segmentation.morphologyIterations);
+
 	if (config.resultRoot.IsEmpty())
 	{
 		config.resultRoot = _T("results");
@@ -101,4 +116,30 @@ CString CAppConfigLoader::ReadStringValue(const CString& iniPath, const CString&
 	CString value(buffer);
 	value.Trim();
 	return value;
+}
+
+int CAppConfigLoader::ReadIntValue(const CString& iniPath, const CString& section, const CString& key, int defaultValue)
+{
+	const CString value = ReadStringValue(iniPath, section, key);
+	if (value.IsEmpty())
+	{
+		return defaultValue;
+	}
+
+	TCHAR* end = nullptr;
+	const long parsed = _tcstol(value, &end, 10);
+	return end != value ? static_cast<int>(parsed) : defaultValue;
+}
+
+double CAppConfigLoader::ReadDoubleValue(const CString& iniPath, const CString& section, const CString& key, double defaultValue)
+{
+	const CString value = ReadStringValue(iniPath, section, key);
+	if (value.IsEmpty())
+	{
+		return defaultValue;
+	}
+
+	TCHAR* end = nullptr;
+	const double parsed = _tcstod(value, &end);
+	return end != value ? parsed : defaultValue;
 }

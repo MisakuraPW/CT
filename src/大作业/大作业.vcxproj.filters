@@ -93,6 +93,9 @@
     <ClInclude Include="Preprocessor.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="ProcessingOptions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="大作业.cpp">

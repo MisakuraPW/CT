@@ -149,6 +149,7 @@ bool CDatasetBatchRunner::Run(
 		batchOptions.outputRoot = row.outputRoot.GetString();
 		batchOptions.caseName = item.caseId;
 		batchOptions.saveIntermediate = options.saveIntermediate;
+		batchOptions.segmentationOptions = options.segmentationOptions;
 
 		BatchProcessResult batchResult;
 		if (!processor.ProcessSlices(sourceSlices, lungMaskSlices, infectionMaskSlices, batchOptions, batchResult, caseError))

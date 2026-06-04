@@ -31,13 +31,13 @@ namespace
     }
 }
 
-LungSegmentationResult CLungSegmenter::Segment(const cv::Mat& source) const
+LungSegmentationResult CLungSegmenter::Segment(const cv::Mat& source, const LungSegmentationOptions& options) const
 {
     LungSegmentationResult result;
     result.gray = MakeGray8(source);
-    result.thresholdMask = ThresholdLungCandidates(result.gray);
-    result.connectedMask = KeepMainComponents(result.thresholdMask);
-    result.morphologyMask = RepairMask(result.connectedMask);
+    result.thresholdMask = ThresholdLungCandidates(result.gray, options);
+    result.connectedMask = KeepMainComponents(result.thresholdMask, options);
+    result.morphologyMask = RepairMask(result.connectedMask, options);
     result.finalMask = FillHoles(result.morphologyMask);
     return result;
 }
@@ -76,7 +76,7 @@ cv::Mat CLungSegmenter::MakeGray8(const cv::Mat& source) const
     return gray8.clone();
 }
 
-cv::Mat CLungSegmenter::ThresholdLungCandidates(const cv::Mat& gray) const
+cv::Mat CLungSegmenter::ThresholdLungCandidates(const cv::Mat& gray, const LungSegmentationOptions& options) const
 {
     if (gray.empty())
     {
@@ -84,7 +84,8 @@ cv::Mat CLungSegmenter::ThresholdLungCandidates(const cv::Mat& gray) const
     }
 
     cv::Mat blurred;
-    cv::GaussianBlur(gray, blurred, cv::Size(5, 5), 0.0);
+    const int kernelSize = NormalizeOddKernelSize(options.thresholdGaussianKernelSize);
+    cv::GaussianBlur(gray, blurred, cv::Size(kernelSize, kernelSize), 0.0);
 
     cv::Mat mask;
     cv::threshold(blurred, mask, 0, 255, cv::THRESH_BINARY_INV | cv::THRESH_OTSU);
@@ -92,7 +93,7 @@ cv::Mat CLungSegmenter::ThresholdLungCandidates(const cv::Mat& gray) const
     return mask;
 }
 
-cv::Mat CLungSegmenter::KeepMainComponents(const cv::Mat& binaryMask) const
+cv::Mat CLungSegmenter::KeepMainComponents(const cv::Mat& binaryMask, const LungSegmentationOptions& options) const
 {
     if (binaryMask.empty())
     {
@@ -105,7 +106,8 @@ cv::Mat CLungSegmenter::KeepMainComponents(const cv::Mat& binaryMask) const
     const int labelCount = cv::connectedComponentsWithStats(binaryMask, labels, stats, centroids, 8, CV_32S);
 
     const int imageArea = binaryMask.rows * binaryMask.cols;
-    const int minArea = std::max(64, imageArea / 1000);
+    const int divisor = std::max(1, options.minComponentAreaDivisor);
+    const int minArea = std::max(options.minComponentArea, imageArea / divisor);
 
     std::vector<ComponentCandidate> candidates;
     for (int label = 1; label < labelCount; ++label)
@@ -141,7 +143,7 @@ cv::Mat CLungSegmenter::KeepMainComponents(const cv::Mat& binaryMask) const
     });
 
     cv::Mat output = cv::Mat::zeros(binaryMask.size(), CV_8UC1);
-    const size_t keepCount = std::min<size_t>(2, candidates.size());
+    const size_t keepCount = std::min<size_t>(std::max(1, options.keepComponentCount), candidates.size());
     for (size_t i = 0; i < keepCount; ++i)
     {
         output.setTo(255, labels == candidates[i].label);
@@ -151,19 +153,22 @@ cv::Mat CLungSegmenter::KeepMainComponents(const cv::Mat& binaryMask) const
     return output;
 }
 
-cv::Mat CLungSegmenter::RepairMask(const cv::Mat& binaryMask) const
+cv::Mat CLungSegmenter::RepairMask(const cv::Mat& binaryMask, const LungSegmentationOptions& options) const
 {
     if (binaryMask.empty())
     {
         return {};
     }
 
-    const cv::Mat openKernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
-    const cv::Mat closeKernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(7, 7));
+    const int openKernelSize = NormalizeOddKernelSize(options.openKernelSize);
+    const int closeKernelSize = NormalizeOddKernelSize(options.closeKernelSize);
+    const int iterations = std::max(1, options.morphologyIterations);
+    const cv::Mat openKernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(openKernelSize, openKernelSize));
+    const cv::Mat closeKernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(closeKernelSize, closeKernelSize));
 
     cv::Mat repaired;
-    cv::morphologyEx(binaryMask, repaired, cv::MORPH_OPEN, openKernel, cv::Point(-1, -1), 1);
-    cv::morphologyEx(repaired, repaired, cv::MORPH_CLOSE, closeKernel, cv::Point(-1, -1), 1);
+    cv::morphologyEx(binaryMask, repaired, cv::MORPH_OPEN, openKernel, cv::Point(-1, -1), iterations);
+    cv::morphologyEx(repaired, repaired, cv::MORPH_CLOSE, closeKernel, cv::Point(-1, -1), iterations);
     EnsureBinaryMask(repaired);
     return repaired;
 }
@@ -184,4 +189,14 @@ cv::Mat CLungSegmenter::FillHoles(const cv::Mat& binaryMask) const
     cv::Mat filled = binaryMask | holes;
     EnsureBinaryMask(filled);
     return filled;
+}
+
+int CLungSegmenter::NormalizeOddKernelSize(int kernelSize) const
+{
+    int normalized = std::max(3, kernelSize);
+    if (normalized % 2 == 0)
+    {
+        ++normalized;
+    }
+    return normalized;
 }

@@ -127,7 +127,8 @@ cv::Mat CPreprocessor::ApplyClahe(const cv::Mat& source, double clipLimit, const
 	}
 
 	cv::Mat output;
-	cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(std::max(0.1, clipLimit), tileGridSize);
+	const cv::Size normalizedTileGridSize(std::max(1, tileGridSize.width), std::max(1, tileGridSize.height));
+	cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(std::max(0.1, clipLimit), normalizedTileGridSize);
 	clahe->apply(gray, output);
 	return output;
 }

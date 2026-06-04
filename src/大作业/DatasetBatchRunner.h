@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DatasetScanner.h"
+#include "ProcessingOptions.h"
 
 #include <opencv2/core.hpp>
 
@@ -10,6 +11,7 @@ struct DatasetBatchOptions
 {
 	CString outputRoot;
 	bool saveIntermediate = true;
+	LungSegmentationOptions segmentationOptions;
 };
 
 struct DatasetBatchSummary

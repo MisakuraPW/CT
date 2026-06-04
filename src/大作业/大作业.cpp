@@ -306,6 +306,7 @@ void C大作业App::OnDatasetProcessConfigured()
 	DatasetBatchOptions options;
 	options.outputRoot = outputRoot;
 	options.saveIntermediate = config.saveIntermediate;
+	options.segmentationOptions = config.segmentation;
 
 	DatasetBatchSummary summary;
 	CDatasetBatchRunner runner;

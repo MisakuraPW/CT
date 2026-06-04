@@ -2,6 +2,7 @@
 
 #include "InfectionAnalyzer.h"
 #include "MetricsCalculator.h"
+#include "ProcessingOptions.h"
 
 #include <opencv2/core.hpp>
 
@@ -13,6 +14,7 @@ struct BatchOptions
     std::wstring outputRoot;
     CString caseName;
     bool saveIntermediate = true;
+    LungSegmentationOptions segmentationOptions;
 };
 
 struct BatchProcessResult
