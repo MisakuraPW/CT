@@ -213,6 +213,7 @@
     <ClInclude Include="OutputWnd.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ProcessingOptions.h" />
+    <ClInclude Include="ProcessingOptionsDialog.h" />
     <ClInclude Include="Preprocessor.h" />
     <ClInclude Include="PropertiesWnd.h" />
     <ClInclude Include="Resource.h" />
@@ -246,6 +247,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Preprocessor.cpp" />
+    <ClCompile Include="ProcessingOptionsDialog.cpp" />
     <ClCompile Include="PropertiesWnd.cpp" />
     <ClCompile Include="ViewTree.cpp" />
     <ClCompile Include="大作业.cpp" />

@@ -15,6 +15,7 @@
 #include "AppConfig.h"
 #include "DatasetBatchRunner.h"
 #include "DatasetScanner.h"
+#include "ProcessingOptionsDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -30,6 +31,7 @@ BEGIN_MESSAGE_MAP(C大作业App, CWinAppEx)
 	ON_COMMAND(ID_FILE_OPEN, &C大作业App::OnFileOpen)
 	ON_COMMAND(ID_DATASET_SCAN_TASKS, &C大作业App::OnDatasetScanTasks)
 	ON_COMMAND(ID_DATASET_PROCESS_CONFIGURED, &C大作业App::OnDatasetProcessConfigured)
+	ON_COMMAND(ID_APP_PROCESSING_OPTIONS, &C大作业App::OnProcessingOptions)
 	// 标准打印设置命令
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
 END_MESSAGE_MAP()
@@ -328,6 +330,31 @@ void C大作业App::OnDatasetProcessConfigured()
 		summary.totalSlices,
 		summary.summaryCsvPath.GetString());
 	AfxMessageBox(message, summary.failedCases > 0 ? MB_ICONWARNING : MB_ICONINFORMATION);
+}
+
+void C大作业App::OnProcessingOptions()
+{
+	AppConfig config;
+	CString errorMessage;
+	if (!CAppConfigLoader::LoadDefault(config, errorMessage))
+	{
+		AfxMessageBox(errorMessage, MB_ICONWARNING);
+		return;
+	}
+
+	CProcessingOptionsDialog dialog(config, m_pMainWnd);
+	if (dialog.DoModal() != IDOK)
+	{
+		return;
+	}
+
+	if (!CAppConfigLoader::SaveDefaultProcessingOptions(config, errorMessage))
+	{
+		AfxMessageBox(errorMessage, MB_ICONERROR);
+		return;
+	}
+
+	AfxMessageBox(_T("处理参数已保存到 configs\\paths.local.ini。后续预处理、分割和批处理会使用新参数。"), MB_ICONINFORMATION);
 }
 
 // C大作业App 自定义加载/保存方法
