@@ -40,6 +40,7 @@ private:
 		CString imagePath;
 		CString outputRoot;
 		CString batchSummaryCsvPath;
+		CString manifestPath;
 		CString status;
 		CString errorMessage;
 		int totalSlices = 0;

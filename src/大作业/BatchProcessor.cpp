@@ -56,6 +56,18 @@ bool CBatchProcessor::ProcessSlices(
         return false;
     }
 
+    const std::wstring manifestPath = JoinPath(JoinPath(options.outputRoot, L"csv"), L"run_manifest.txt");
+    if (!WriteRunManifest(
+        manifestPath,
+        options,
+        static_cast<int>(sourceSlices.size()),
+        static_cast<int>(gtMaskSlices.size()),
+        static_cast<int>(infectionMaskSlices.size()),
+        errorMessage))
+    {
+        return false;
+    }
+
     CLungSegmenter segmenter;
     CMetricsCalculator metricsCalculator;
     CInfectionAnalyzer infectionAnalyzer;
@@ -128,6 +140,7 @@ bool CBatchProcessor::ProcessSlices(
     }
 
     result.summaryCsvPath = csvPath.c_str();
+    result.manifestPath = manifestPath.c_str();
     return true;
 }
 
@@ -268,6 +281,42 @@ bool CBatchProcessor::WriteSummaryCsv(
             << infection.rightInfectionArea << ','
             << infection.rightRatio << '\n';
     }
+
+    return output.good();
+}
+
+bool CBatchProcessor::WriteRunManifest(
+    const std::wstring& path,
+    const BatchOptions& options,
+    int sourceSliceCount,
+    int gtMaskSliceCount,
+    int infectionMaskSliceCount,
+    CString& errorMessage) const
+{
+    std::ofstream output(path, std::ios::binary);
+    if (!output)
+    {
+        errorMessage = _T("无法写入批处理运行参数 manifest。");
+        return false;
+    }
+
+    const unsigned char bom[] = { 0xEF, 0xBB, 0xBF };
+    output.write(reinterpret_cast<const char*>(bom), sizeof(bom));
+
+    const CStringA caseNameUtf8(CW2A(options.caseName, CP_UTF8));
+    output << "case_name=" << caseNameUtf8.GetString() << "\n";
+    output << "source_slice_count=" << sourceSliceCount << "\n";
+    output << "gt_mask_slice_count=" << gtMaskSliceCount << "\n";
+    output << "infection_mask_slice_count=" << infectionMaskSliceCount << "\n";
+    output << "save_intermediate=" << (options.saveIntermediate ? 1 : 0) << "\n";
+    output << "\n[segmentation]\n";
+    output << "threshold_gaussian_kernel_size=" << options.segmentationOptions.thresholdGaussianKernelSize << "\n";
+    output << "min_component_area=" << options.segmentationOptions.minComponentArea << "\n";
+    output << "min_component_area_divisor=" << options.segmentationOptions.minComponentAreaDivisor << "\n";
+    output << "keep_component_count=" << options.segmentationOptions.keepComponentCount << "\n";
+    output << "open_kernel_size=" << options.segmentationOptions.openKernelSize << "\n";
+    output << "close_kernel_size=" << options.segmentationOptions.closeKernelSize << "\n";
+    output << "morphology_iterations=" << options.segmentationOptions.morphologyIterations << "\n";
 
     return output.good();
 }

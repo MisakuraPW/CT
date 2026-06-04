@@ -163,6 +163,7 @@ bool CDatasetBatchRunner::Run(
 
 		row.status = _T("ok");
 		row.batchSummaryCsvPath = batchResult.summaryCsvPath;
+		row.manifestPath = batchResult.manifestPath;
 		row.totalSlices = batchResult.totalSlices;
 		row.processedSlices = batchResult.processedSlices;
 		row.metricSlices = batchResult.metricSlices;
@@ -273,7 +274,7 @@ bool CDatasetBatchRunner::WriteDatasetSummaryCsv(const CString& path, const std:
 
 	const unsigned char bom[] = {0xEF, 0xBB, 0xBF};
 	output.write(reinterpret_cast<const char*>(bom), sizeof(bom));
-	output << "dataset_kind,case_id,status,total_slices,processed_slices,metric_slices,infection_slices,image_path,output_root,batch_summary_csv,error\n";
+	output << "dataset_kind,case_id,status,total_slices,processed_slices,metric_slices,infection_slices,image_path,output_root,batch_summary_csv,run_manifest,error\n";
 
 	for (const CaseRunRow& row : rows)
 	{
@@ -292,6 +293,8 @@ bool CDatasetBatchRunner::WriteDatasetSummaryCsv(const CString& path, const std:
 		WriteCsvField(output, row.outputRoot);
 		output << ",";
 		WriteCsvField(output, row.batchSummaryCsvPath);
+		output << ",";
+		WriteCsvField(output, row.manifestPath);
 		output << ",";
 		WriteCsvField(output, row.errorMessage);
 		output << "\n";

@@ -24,6 +24,7 @@ struct BatchProcessResult
     int metricSlices = 0;
     int infectionSlices = 0;
     CString summaryCsvPath;
+    CString manifestPath;
 };
 
 class CBatchProcessor
@@ -56,6 +57,13 @@ private:
         const std::vector<bool>& hasMetrics,
         const std::vector<InfectionStats>& infectionRows,
         const std::vector<bool>& hasInfection,
+        CString& errorMessage) const;
+    bool WriteRunManifest(
+        const std::wstring& path,
+        const BatchOptions& options,
+        int sourceSliceCount,
+        int gtMaskSliceCount,
+        int infectionMaskSliceCount,
         CString& errorMessage) const;
     cv::Mat NormalizeMask(const cv::Mat& mask, const cv::Size& size) const;
     std::wstring JoinPath(const std::wstring& lhs, const std::wstring& rhs) const;

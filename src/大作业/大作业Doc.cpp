@@ -1076,12 +1076,13 @@ void C大作业Doc::OnBatchProcessCurrentVolume()
 	}
 
 	CString message;
-	message.Format(_T("批量处理完成。\r\n总切片数: %d\r\n成功处理: %d\r\n计算指标切片: %d\r\n感染统计切片: %d\r\n\r\n汇总 CSV:\r\n%s"),
+	message.Format(_T("批量处理完成。\r\n总切片数: %d\r\n成功处理: %d\r\n计算指标切片: %d\r\n感染统计切片: %d\r\n\r\n汇总 CSV:\r\n%s\r\n\r\n运行参数:\r\n%s"),
 		result.totalSlices,
 		result.processedSlices,
 		result.metricSlices,
 		result.infectionSlices,
-		result.summaryCsvPath.GetString());
+		result.summaryCsvPath.GetString(),
+		result.manifestPath.GetString());
 	AfxMessageBox(message);
 }
 
