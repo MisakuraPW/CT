@@ -20,6 +20,7 @@
 #include "MetricsCalculator.h"
 #include "NiftiIO.h"
 #include "OverlayVisualizer.h"
+#include "Preprocessor.h"
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
@@ -83,8 +84,17 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_RESULT_SAVE_CURRENT, &C大作业Doc::OnSaveCurrentResult)
 	ON_COMMAND(ID_RESULT_EXPORT_METRICS_CSV, &C大作业Doc::OnExportMetricsCsv)
 	ON_COMMAND(ID_RESULT_EXPORT_INFECTION_CSV, &C大作业Doc::OnExportInfectionCsv)
+	ON_COMMAND(ID_PREPROCESS_GRAY_NORMALIZE, &C大作业Doc::OnPreprocessGrayNormalize)
+	ON_COMMAND(ID_PREPROCESS_LUNG_WINDOW, &C大作业Doc::OnPreprocessLungWindow)
+	ON_COMMAND(ID_PREPROCESS_GAUSSIAN, &C大作业Doc::OnPreprocessGaussian)
+	ON_COMMAND(ID_PREPROCESS_MEDIAN, &C大作业Doc::OnPreprocessMedian)
+	ON_COMMAND(ID_PREPROCESS_CLAHE, &C大作业Doc::OnPreprocessClahe)
 	ON_COMMAND(ID_VIEW_SHOW_ORIGINAL, &C大作业Doc::OnShowOriginal)
 	ON_COMMAND(ID_VIEW_SHOW_GRAY, &C大作业Doc::OnShowGray)
+	ON_COMMAND(ID_VIEW_SHOW_LUNG_WINDOW, &C大作业Doc::OnShowLungWindow)
+	ON_COMMAND(ID_VIEW_SHOW_GAUSSIAN, &C大作业Doc::OnShowGaussian)
+	ON_COMMAND(ID_VIEW_SHOW_MEDIAN, &C大作业Doc::OnShowMedian)
+	ON_COMMAND(ID_VIEW_SHOW_CLAHE, &C大作业Doc::OnShowClahe)
 	ON_COMMAND(ID_VIEW_SHOW_THRESHOLD, &C大作业Doc::OnShowThreshold)
 	ON_COMMAND(ID_VIEW_SHOW_CONNECTED, &C大作业Doc::OnShowConnected)
 	ON_COMMAND(ID_VIEW_SHOW_MORPHOLOGY, &C大作业Doc::OnShowMorphology)
@@ -105,8 +115,17 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_RESULT_SAVE_CURRENT, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_RESULT_EXPORT_METRICS_CSV, &C大作业Doc::OnUpdateHasMetrics)
 	ON_UPDATE_COMMAND_UI(ID_RESULT_EXPORT_INFECTION_CSV, &C大作业Doc::OnUpdateHasInfectionStats)
+	ON_UPDATE_COMMAND_UI(ID_PREPROCESS_GRAY_NORMALIZE, &C大作业Doc::OnUpdateHasOriginal)
+	ON_UPDATE_COMMAND_UI(ID_PREPROCESS_LUNG_WINDOW, &C大作业Doc::OnUpdateHasOriginal)
+	ON_UPDATE_COMMAND_UI(ID_PREPROCESS_GAUSSIAN, &C大作业Doc::OnUpdateHasOriginal)
+	ON_UPDATE_COMMAND_UI(ID_PREPROCESS_MEDIAN, &C大作业Doc::OnUpdateHasOriginal)
+	ON_UPDATE_COMMAND_UI(ID_PREPROCESS_CLAHE, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_ORIGINAL, &C大作业Doc::OnUpdateHasOriginal)
-	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_GRAY, &C大作业Doc::OnUpdateHasSegmentation)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_GRAY, &C大作业Doc::OnUpdateHasPreprocessedGray)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_LUNG_WINDOW, &C大作业Doc::OnUpdateHasLungWindowImage)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_GAUSSIAN, &C大作业Doc::OnUpdateHasGaussianImage)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_MEDIAN, &C大作业Doc::OnUpdateHasMedianImage)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_CLAHE, &C大作业Doc::OnUpdateHasClaheImage)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_THRESHOLD, &C大作业Doc::OnUpdateHasSegmentation)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_CONNECTED, &C大作业Doc::OnUpdateHasSegmentation)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_MORPHOLOGY, &C大作业Doc::OnUpdateHasSegmentation)
@@ -251,7 +270,19 @@ const cv::Mat& C大作业Doc::GetDisplayImage() const
 	switch (m_displayKind)
 	{
 	case DisplayImageKind::Gray:
+		if (!m_grayImage.empty())
+		{
+			return m_grayImage;
+		}
 		return m_segmentationResult.gray.empty() ? m_originalImage : m_segmentationResult.gray;
+	case DisplayImageKind::LungWindow:
+		return m_lungWindowImage.empty() ? m_originalImage : m_lungWindowImage;
+	case DisplayImageKind::GaussianBlur:
+		return m_gaussianImage.empty() ? m_originalImage : m_gaussianImage;
+	case DisplayImageKind::MedianBlur:
+		return m_medianImage.empty() ? m_originalImage : m_medianImage;
+	case DisplayImageKind::Clahe:
+		return m_claheImage.empty() ? m_originalImage : m_claheImage;
 	case DisplayImageKind::Threshold:
 		return m_segmentationResult.thresholdMask.empty() ? m_originalImage : m_segmentationResult.thresholdMask;
 	case DisplayImageKind::Connected:
@@ -288,6 +319,14 @@ CString C大作业Doc::GetDisplayName() const
 	{
 	case DisplayImageKind::Gray:
 		return prefix + _T("灰度/归一化图像");
+	case DisplayImageKind::LungWindow:
+		return prefix + _T("肺窗显示 WL=-600 WW=1500");
+	case DisplayImageKind::GaussianBlur:
+		return prefix + _T("高斯滤波结果");
+	case DisplayImageKind::MedianBlur:
+		return prefix + _T("中值滤波结果");
+	case DisplayImageKind::Clahe:
+		return prefix + _T("CLAHE 对比度增强结果");
 	case DisplayImageKind::Threshold:
 		return prefix + _T("Otsu 阈值分割结果");
 	case DisplayImageKind::Connected:
@@ -315,6 +354,31 @@ CString C大作业Doc::GetDisplayName() const
 BOOL C大作业Doc::HasOriginalImage() const
 {
 	return !m_originalImage.empty();
+}
+
+BOOL C大作业Doc::HasPreprocessedGray() const
+{
+	return !m_grayImage.empty() || !m_segmentationResult.gray.empty();
+}
+
+BOOL C大作业Doc::HasLungWindowImage() const
+{
+	return !m_lungWindowImage.empty();
+}
+
+BOOL C大作业Doc::HasGaussianImage() const
+{
+	return !m_gaussianImage.empty();
+}
+
+BOOL C大作业Doc::HasMedianImage() const
+{
+	return !m_medianImage.empty();
+}
+
+BOOL C大作业Doc::HasClaheImage() const
+{
+	return !m_claheImage.empty();
 }
 
 BOOL C大作业Doc::HasFinalMask() const
@@ -508,6 +572,11 @@ void C大作业Doc::ApplyCurrentSlice()
 
 void C大作业Doc::ClearSliceDerivedResults()
 {
+	m_grayImage.release();
+	m_lungWindowImage.release();
+	m_gaussianImage.release();
+	m_medianImage.release();
+	m_claheImage.release();
 	m_segmentationResult = LungSegmentationResult{};
 	m_connectedColorMap.release();
 	m_maskComparisonOverlay.release();
@@ -521,6 +590,11 @@ void C大作业Doc::ClearSliceDerivedResults()
 void C大作业Doc::ClearImages()
 {
 	m_originalImage.release();
+	m_grayImage.release();
+	m_lungWindowImage.release();
+	m_gaussianImage.release();
+	m_medianImage.release();
+	m_claheImage.release();
 	m_manualMask.release();
 	m_infectionMask.release();
 	m_connectedColorMap.release();
@@ -624,6 +698,7 @@ void C大作业Doc::OnRunLungSegmentation()
 	}
 
 	COverlayVisualizer visualizer;
+	m_grayImage = m_segmentationResult.gray.clone();
 	m_connectedColorMap = visualizer.MakeConnectedComponentColorMap(m_segmentationResult.thresholdMask);
 	m_maskComparisonOverlay.release();
 	m_hasMetrics = FALSE;
@@ -763,6 +838,66 @@ void C大作业Doc::OnExportInfectionCsv()
 	AfxMessageBox(_T("感染负荷 CSV 已导出。"));
 }
 
+void C大作业Doc::OnPreprocessGrayNormalize()
+{
+	CPreprocessor preprocessor;
+	m_grayImage = preprocessor.MakeGray8(m_originalImage);
+	if (m_grayImage.empty())
+	{
+		AfxMessageBox(_T("灰度/归一化处理失败。"));
+		return;
+	}
+	SetDisplayKind(DisplayImageKind::Gray);
+}
+
+void C大作业Doc::OnPreprocessLungWindow()
+{
+	CPreprocessor preprocessor;
+	m_lungWindowImage = preprocessor.ApplyLungWindow(m_originalImage);
+	if (m_lungWindowImage.empty())
+	{
+		AfxMessageBox(_T("肺窗处理失败。"));
+		return;
+	}
+	SetDisplayKind(DisplayImageKind::LungWindow);
+}
+
+void C大作业Doc::OnPreprocessGaussian()
+{
+	CPreprocessor preprocessor;
+	m_gaussianImage = preprocessor.ApplyGaussianBlur(m_originalImage, 5);
+	if (m_gaussianImage.empty())
+	{
+		AfxMessageBox(_T("高斯滤波失败。"));
+		return;
+	}
+	SetDisplayKind(DisplayImageKind::GaussianBlur);
+}
+
+void C大作业Doc::OnPreprocessMedian()
+{
+	CPreprocessor preprocessor;
+	m_medianImage = preprocessor.ApplyMedianBlur(m_originalImage, 5);
+	if (m_medianImage.empty())
+	{
+		AfxMessageBox(_T("中值滤波失败。"));
+		return;
+	}
+	SetDisplayKind(DisplayImageKind::MedianBlur);
+}
+
+void C大作业Doc::OnPreprocessClahe()
+{
+	CPreprocessor preprocessor;
+	m_claheImage = preprocessor.ApplyClahe(m_originalImage, 2.0, cv::Size(8, 8));
+	if (m_claheImage.empty())
+	{
+		AfxMessageBox(_T("CLAHE 对比度增强失败。"));
+		return;
+	}
+	SetDisplayKind(DisplayImageKind::Clahe);
+}
+
 void C大作业Doc::OnShowOriginal()
 {
 	SetDisplayKind(DisplayImageKind::Original);
@@ -771,6 +906,26 @@ void C大作业Doc::OnShowOriginal()
 void C大作业Doc::OnShowGray()
 {
 	SetDisplayKind(DisplayImageKind::Gray);
+}
+
+void C大作业Doc::OnShowLungWindow()
+{
+	SetDisplayKind(DisplayImageKind::LungWindow);
+}
+
+void C大作业Doc::OnShowGaussian()
+{
+	SetDisplayKind(DisplayImageKind::GaussianBlur);
+}
+
+void C大作业Doc::OnShowMedian()
+{
+	SetDisplayKind(DisplayImageKind::MedianBlur);
+}
+
+void C大作业Doc::OnShowClahe()
+{
+	SetDisplayKind(DisplayImageKind::Clahe);
 }
 
 void C大作业Doc::OnShowThreshold()
@@ -914,6 +1069,31 @@ void C大作业Doc::OnBatchProcessCurrentVolume()
 void C大作业Doc::OnUpdateHasOriginal(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(HasOriginalImage());
+}
+
+void C大作业Doc::OnUpdateHasPreprocessedGray(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasPreprocessedGray());
+}
+
+void C大作业Doc::OnUpdateHasLungWindowImage(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasLungWindowImage());
+}
+
+void C大作业Doc::OnUpdateHasGaussianImage(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasGaussianImage());
+}
+
+void C大作业Doc::OnUpdateHasMedianImage(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasMedianImage());
+}
+
+void C大作业Doc::OnUpdateHasClaheImage(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasClaheImage());
 }
 
 void C大作业Doc::OnUpdateHasSegmentation(CCmdUI* pCmdUI)

@@ -16,6 +16,10 @@ enum class DisplayImageKind
 {
 	Original,
 	Gray,
+	LungWindow,
+	GaussianBlur,
+	MedianBlur,
+	Clahe,
 	Threshold,
 	Connected,
 	Morphology,
@@ -41,6 +45,11 @@ public:
 	const cv::Mat& GetDisplayImage() const;
 	CString GetDisplayName() const;
 	BOOL HasOriginalImage() const;
+	BOOL HasPreprocessedGray() const;
+	BOOL HasLungWindowImage() const;
+	BOOL HasGaussianImage() const;
+	BOOL HasMedianImage() const;
+	BOOL HasClaheImage() const;
 	BOOL HasFinalMask() const;
 	BOOL HasManualMask() const;
 	BOOL HasInfectionMask() const;
@@ -73,6 +82,11 @@ public:
 
 protected:
 	cv::Mat m_originalImage;
+	cv::Mat m_grayImage;
+	cv::Mat m_lungWindowImage;
+	cv::Mat m_gaussianImage;
+	cv::Mat m_medianImage;
+	cv::Mat m_claheImage;
 	cv::Mat m_manualMask;
 	cv::Mat m_infectionMask;
 	cv::Mat m_connectedColorMap;
@@ -113,8 +127,17 @@ protected:
 	afx_msg void OnSaveCurrentResult();
 	afx_msg void OnExportMetricsCsv();
 	afx_msg void OnExportInfectionCsv();
+	afx_msg void OnPreprocessGrayNormalize();
+	afx_msg void OnPreprocessLungWindow();
+	afx_msg void OnPreprocessGaussian();
+	afx_msg void OnPreprocessMedian();
+	afx_msg void OnPreprocessClahe();
 	afx_msg void OnShowOriginal();
 	afx_msg void OnShowGray();
+	afx_msg void OnShowLungWindow();
+	afx_msg void OnShowGaussian();
+	afx_msg void OnShowMedian();
+	afx_msg void OnShowClahe();
 	afx_msg void OnShowThreshold();
 	afx_msg void OnShowConnected();
 	afx_msg void OnShowMorphology();
@@ -128,6 +151,11 @@ protected:
 	afx_msg void OnNextSlice();
 	afx_msg void OnBatchProcessCurrentVolume();
 	afx_msg void OnUpdateHasOriginal(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasPreprocessedGray(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasLungWindowImage(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasGaussianImage(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasMedianImage(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasClaheImage(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasSegmentation(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasFinalAndMask(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasManualMask(CCmdUI* pCmdUI);
