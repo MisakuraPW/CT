@@ -8,6 +8,7 @@
 #include "InfectionAnalyzer.h"
 #include "LungSegmenter.h"
 #include "MetricsCalculator.h"
+#include "NiftiIO.h"
 
 #include <opencv2/core.hpp>
 
@@ -43,6 +44,9 @@ public:
 	BOOL HasInfectionMask() const;
 	BOOL HasMetrics() const;
 	BOOL HasInfectionStats() const;
+	BOOL HasVolume() const;
+	BOOL CanMoveToPreviousSlice() const;
+	BOOL CanMoveToNextSlice() const;
 
 // 重写
 public:
@@ -67,8 +71,12 @@ protected:
 	cv::Mat m_manualMask;
 	cv::Mat m_infectionMask;
 	cv::Mat m_infectionOverlay;
+	NiftiVolume m_sourceVolume;
+	NiftiVolume m_manualMaskVolume;
+	NiftiVolume m_infectionMaskVolume;
 	LungSegmentationResult m_segmentationResult;
 	DisplayImageKind m_displayKind = DisplayImageKind::Original;
+	int m_currentSliceIndex = 0;
 	CString m_sourcePath;
 	CString m_manualMaskPath;
 	CString m_infectionMaskPath;
@@ -80,6 +88,9 @@ protected:
 	BOOL LoadSourceImage(const CString& pathName);
 	BOOL LoadManualMask(const CString& pathName);
 	BOOL LoadInfectionMask(const CString& pathName);
+	cv::Mat SliceOrEmpty(const NiftiVolume& volume, int sliceIndex) const;
+	void ApplyCurrentSlice();
+	void ClearSliceDerivedResults();
 	void ClearImages();
 	void SetDisplayKind(DisplayImageKind kind);
 	cv::Mat CurrentSaveImage() const;
@@ -104,6 +115,8 @@ protected:
 	afx_msg void OnShowManualMask();
 	afx_msg void OnShowInfectionMask();
 	afx_msg void OnShowInfectionOverlay();
+	afx_msg void OnPreviousSlice();
+	afx_msg void OnNextSlice();
 	afx_msg void OnUpdateHasOriginal(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasSegmentation(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasFinalAndMask(CCmdUI* pCmdUI);
@@ -112,6 +125,8 @@ protected:
 	afx_msg void OnUpdateHasFinalAndInfection(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasMetrics(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasInfectionStats(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateCanPreviousSlice(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateCanNextSlice(CCmdUI* pCmdUI);
 	DECLARE_MESSAGE_MAP()
 
 #ifdef SHARED_HANDLERS

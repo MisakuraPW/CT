@@ -72,6 +72,9 @@
     <ClInclude Include="CsvExporter.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="NiftiIO.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="大作业.cpp">
@@ -120,6 +123,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CsvExporter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NiftiIO.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

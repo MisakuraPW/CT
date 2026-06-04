@@ -17,11 +17,52 @@
 #include "InfectionAnalyzer.h"
 #include "LungSegmenter.h"
 #include "MetricsCalculator.h"
+#include "NiftiIO.h"
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include <algorithm>
 #include <propkey.h>
+
+namespace
+{
+	cv::Mat NormalizeBinaryMaskForDoc(const cv::Mat& mask)
+	{
+		if (mask.empty())
+		{
+			return {};
+		}
+
+		cv::Mat gray;
+		if (mask.channels() == 1)
+		{
+			gray = mask;
+		}
+		else if (mask.channels() == 3)
+		{
+			cv::cvtColor(mask, gray, cv::COLOR_BGR2GRAY);
+		}
+		else if (mask.channels() == 4)
+		{
+			cv::cvtColor(mask, gray, cv::COLOR_BGRA2GRAY);
+		}
+
+		cv::Mat gray8;
+		if (gray.depth() == CV_8U)
+		{
+			gray8 = gray;
+		}
+		else
+		{
+			cv::normalize(gray, gray8, 0, 255, cv::NORM_MINMAX, CV_8U);
+		}
+
+		cv::Mat binary;
+		cv::threshold(gray8, binary, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+		return binary;
+	}
+}
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -49,6 +90,8 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_VIEW_SHOW_MANUAL_MASK, &C大作业Doc::OnShowManualMask)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_MASK, &C大作业Doc::OnShowInfectionMask)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnShowInfectionOverlay)
+	ON_COMMAND(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnPreviousSlice)
+	ON_COMMAND(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnNextSlice)
 	ON_UPDATE_COMMAND_UI(ID_IMAGE_OPEN_MASK, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_IMAGE_OPEN_INFECTION_MASK, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_PROCESS_RUN_SEGMENTATION, &C大作业Doc::OnUpdateHasOriginal)
@@ -66,6 +109,8 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_MANUAL_MASK, &C大作业Doc::OnUpdateHasManualMask)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_MASK, &C大作业Doc::OnUpdateHasInfectionMask)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnUpdateHasInfectionStats)
+	ON_UPDATE_COMMAND_UI(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnUpdateCanPreviousSlice)
+	ON_UPDATE_COMMAND_UI(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnUpdateCanNextSlice)
 END_MESSAGE_MAP()
 
 
@@ -221,27 +266,33 @@ const cv::Mat& C大作业Doc::GetDisplayImage() const
 
 CString C大作业Doc::GetDisplayName() const
 {
+	CString prefix;
+	if (HasVolume())
+	{
+		prefix.Format(_T("切片 %d / %d - "), m_currentSliceIndex + 1, m_sourceVolume.depth);
+	}
+
 	switch (m_displayKind)
 	{
 	case DisplayImageKind::Gray:
-		return _T("灰度/归一化图像");
+		return prefix + _T("灰度/归一化图像");
 	case DisplayImageKind::Threshold:
-		return _T("Otsu 阈值分割结果");
+		return prefix + _T("Otsu 阈值分割结果");
 	case DisplayImageKind::Connected:
-		return _T("连通域筛选结果");
+		return prefix + _T("连通域筛选结果");
 	case DisplayImageKind::Morphology:
-		return _T("形态学修复结果");
+		return prefix + _T("形态学修复结果");
 	case DisplayImageKind::FinalMask:
-		return _T("最终肺部 mask");
+		return prefix + _T("最终肺部 mask");
 	case DisplayImageKind::ManualMask:
-		return _T("人工 mask");
+		return prefix + _T("人工 mask");
 	case DisplayImageKind::InfectionMask:
-		return _T("感染 mask");
+		return prefix + _T("感染 mask");
 	case DisplayImageKind::InfectionOverlay:
-		return _T("感染区域叠加图");
+		return prefix + _T("感染区域叠加图");
 	case DisplayImageKind::Original:
 	default:
-		return _T("原始图像");
+		return prefix + _T("原始图像");
 	}
 }
 
@@ -275,11 +326,42 @@ BOOL C大作业Doc::HasInfectionStats() const
 	return m_hasInfectionStats;
 }
 
+BOOL C大作业Doc::HasVolume() const
+{
+	return m_sourceVolume.depth > 1;
+}
+
+BOOL C大作业Doc::CanMoveToPreviousSlice() const
+{
+	return HasVolume() && m_currentSliceIndex > 0;
+}
+
+BOOL C大作业Doc::CanMoveToNextSlice() const
+{
+	return HasVolume() && m_currentSliceIndex + 1 < m_sourceVolume.depth;
+}
+
 BOOL C大作业Doc::LoadSourceImage(const CString& pathName)
 {
 	ClearImages();
 
-	m_originalImage = ImageIO::LoadImage(pathName.GetString(), cv::IMREAD_UNCHANGED);
+	if (NiftiIO::IsNiftiPath(pathName.GetString()))
+	{
+		CString error;
+		if (!NiftiIO::LoadVolume(pathName.GetString(), m_sourceVolume, error))
+		{
+			AfxMessageBox(error);
+			return FALSE;
+		}
+
+		m_currentSliceIndex = std::max(0, m_sourceVolume.depth / 2);
+		m_originalImage = SliceOrEmpty(m_sourceVolume, m_currentSliceIndex);
+	}
+	else
+	{
+		m_originalImage = ImageIO::LoadImage(pathName.GetString(), cv::IMREAD_UNCHANGED);
+	}
+
 	if (m_originalImage.empty())
 	{
 		return FALSE;
@@ -294,32 +376,112 @@ BOOL C大作业Doc::LoadSourceImage(const CString& pathName)
 
 BOOL C大作业Doc::LoadManualMask(const CString& pathName)
 {
-	m_manualMask = ImageIO::LoadImage(pathName.GetString(), cv::IMREAD_GRAYSCALE);
+	m_manualMaskVolume = NiftiVolume{};
+	if (NiftiIO::IsNiftiPath(pathName.GetString()))
+	{
+		CString error;
+		if (!NiftiIO::LoadVolume(pathName.GetString(), m_manualMaskVolume, error))
+		{
+			AfxMessageBox(error);
+			return FALSE;
+		}
+		m_manualMask = SliceOrEmpty(m_manualMaskVolume, m_currentSliceIndex);
+	}
+	else
+	{
+		m_manualMask = ImageIO::LoadImage(pathName.GetString(), cv::IMREAD_GRAYSCALE);
+	}
+
 	if (m_manualMask.empty())
 	{
 		return FALSE;
 	}
 
-	cv::threshold(m_manualMask, m_manualMask, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+	m_manualMask = NormalizeBinaryMaskForDoc(m_manualMask);
 	m_manualMaskPath = pathName;
+	m_hasMetrics = FALSE;
 	SetDisplayKind(DisplayImageKind::ManualMask);
 	return TRUE;
 }
 
 BOOL C大作业Doc::LoadInfectionMask(const CString& pathName)
 {
-	m_infectionMask = ImageIO::LoadImage(pathName.GetString(), cv::IMREAD_GRAYSCALE);
+	m_infectionMaskVolume = NiftiVolume{};
+	if (NiftiIO::IsNiftiPath(pathName.GetString()))
+	{
+		CString error;
+		if (!NiftiIO::LoadVolume(pathName.GetString(), m_infectionMaskVolume, error))
+		{
+			AfxMessageBox(error);
+			return FALSE;
+		}
+		m_infectionMask = SliceOrEmpty(m_infectionMaskVolume, m_currentSliceIndex);
+	}
+	else
+	{
+		m_infectionMask = ImageIO::LoadImage(pathName.GetString(), cv::IMREAD_GRAYSCALE);
+	}
+
 	if (m_infectionMask.empty())
 	{
 		return FALSE;
 	}
 
-	cv::threshold(m_infectionMask, m_infectionMask, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+	m_infectionMask = NormalizeBinaryMaskForDoc(m_infectionMask);
 	m_infectionMaskPath = pathName;
 	m_hasInfectionStats = FALSE;
 	m_infectionOverlay.release();
 	SetDisplayKind(DisplayImageKind::InfectionMask);
 	return TRUE;
+}
+
+cv::Mat C大作业Doc::SliceOrEmpty(const NiftiVolume& volume, int sliceIndex) const
+{
+	if (sliceIndex < 0 || sliceIndex >= static_cast<int>(volume.slices.size()))
+	{
+		return {};
+	}
+
+	return volume.slices[sliceIndex].clone();
+}
+
+void C大作业Doc::ApplyCurrentSlice()
+{
+	if (!m_sourceVolume.slices.empty())
+	{
+		m_originalImage = SliceOrEmpty(m_sourceVolume, m_currentSliceIndex);
+	}
+
+	if (!m_manualMaskVolume.slices.empty())
+	{
+		m_manualMask = SliceOrEmpty(m_manualMaskVolume, m_currentSliceIndex);
+		if (!m_manualMask.empty())
+		{
+			m_manualMask = NormalizeBinaryMaskForDoc(m_manualMask);
+		}
+	}
+
+	if (!m_infectionMaskVolume.slices.empty())
+	{
+		m_infectionMask = SliceOrEmpty(m_infectionMaskVolume, m_currentSliceIndex);
+		if (!m_infectionMask.empty())
+		{
+			m_infectionMask = NormalizeBinaryMaskForDoc(m_infectionMask);
+		}
+	}
+
+	ClearSliceDerivedResults();
+	SetDisplayKind(DisplayImageKind::Original);
+}
+
+void C大作业Doc::ClearSliceDerivedResults()
+{
+	m_segmentationResult = LungSegmentationResult{};
+	m_infectionOverlay.release();
+	m_lastMetrics = SegmentationMetrics{};
+	m_lastInfectionStats = InfectionStats{};
+	m_hasMetrics = FALSE;
+	m_hasInfectionStats = FALSE;
 }
 
 void C大作业Doc::ClearImages()
@@ -328,8 +490,12 @@ void C大作业Doc::ClearImages()
 	m_manualMask.release();
 	m_infectionMask.release();
 	m_infectionOverlay.release();
+	m_sourceVolume = NiftiVolume{};
+	m_manualMaskVolume = NiftiVolume{};
+	m_infectionMaskVolume = NiftiVolume{};
 	m_segmentationResult = LungSegmentationResult{};
 	m_displayKind = DisplayImageKind::Original;
+	m_currentSliceIndex = 0;
 	m_sourcePath.Empty();
 	m_manualMaskPath.Empty();
 	m_infectionMaskPath.Empty();
@@ -377,7 +543,7 @@ CString C大作业Doc::GetSourceFileName() const
 void C大作业Doc::OnOpenManualMask()
 {
 	CFileDialog dlg(TRUE, nullptr, nullptr, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
-		_T("Image Files (*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff|All Files (*.*)|*.*||"));
+		_T("Medical/Image Files (*.nii;*.nii.gz;*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff)|*.nii;*.nii.gz;*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff|All Files (*.*)|*.*||"));
 	if (dlg.DoModal() != IDOK)
 	{
 		return;
@@ -392,7 +558,7 @@ void C大作业Doc::OnOpenManualMask()
 void C大作业Doc::OnOpenInfectionMask()
 {
 	CFileDialog dlg(TRUE, nullptr, nullptr, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
-		_T("Image Files (*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff|All Files (*.*)|*.*||"));
+		_T("Medical/Image Files (*.nii;*.nii.gz;*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff)|*.nii;*.nii.gz;*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff|All Files (*.*)|*.*||"));
 	if (dlg.DoModal() != IDOK)
 	{
 		return;
@@ -601,6 +767,28 @@ void C大作业Doc::OnShowInfectionOverlay()
 	SetDisplayKind(DisplayImageKind::InfectionOverlay);
 }
 
+void C大作业Doc::OnPreviousSlice()
+{
+	if (!CanMoveToPreviousSlice())
+	{
+		return;
+	}
+
+	--m_currentSliceIndex;
+	ApplyCurrentSlice();
+}
+
+void C大作业Doc::OnNextSlice()
+{
+	if (!CanMoveToNextSlice())
+	{
+		return;
+	}
+
+	++m_currentSliceIndex;
+	ApplyCurrentSlice();
+}
+
 void C大作业Doc::OnUpdateHasOriginal(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(HasOriginalImage());
@@ -639,4 +827,14 @@ void C大作业Doc::OnUpdateHasMetrics(CCmdUI* pCmdUI)
 void C大作业Doc::OnUpdateHasInfectionStats(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(HasInfectionStats());
+}
+
+void C大作业Doc::OnUpdateCanPreviousSlice(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(CanMoveToPreviousSlice());
+}
+
+void C大作业Doc::OnUpdateCanNextSlice(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(CanMoveToNextSlice());
 }

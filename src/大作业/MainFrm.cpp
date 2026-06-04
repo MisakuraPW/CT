@@ -181,6 +181,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_MANUAL_MASK);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_INFECTION_MASK);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_INFECTION_OVERLAY);
+	lstBasicCommands.AddTail(ID_VOLUME_PREVIOUS_SLICE);
+	lstBasicCommands.AddTail(ID_VOLUME_NEXT_SLICE);
 	lstBasicCommands.AddTail(ID_FILE_PRINT);
 	lstBasicCommands.AddTail(ID_APP_EXIT);
 	lstBasicCommands.AddTail(ID_EDIT_CUT);

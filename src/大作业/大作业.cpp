@@ -24,7 +24,7 @@ BEGIN_MESSAGE_MAP(C大作业App, CWinAppEx)
 	ON_COMMAND(ID_APP_ABOUT, &C大作业App::OnAppAbout)
 	// 基于文件的标准文档命令
 	ON_COMMAND(ID_FILE_NEW, &CWinAppEx::OnFileNew)
-	ON_COMMAND(ID_FILE_OPEN, &CWinAppEx::OnFileOpen)
+	ON_COMMAND(ID_FILE_OPEN, &C大作业App::OnFileOpen)
 	// 标准打印设置命令
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
 END_MESSAGE_MAP()
@@ -198,6 +198,16 @@ void C大作业App::OnAppAbout()
 {
 	CAboutDlg aboutDlg;
 	aboutDlg.DoModal();
+}
+
+void C大作业App::OnFileOpen()
+{
+	CFileDialog dlg(TRUE, nullptr, nullptr, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
+		_T("Medical/Image Files (*.nii;*.nii.gz;*.tif;*.tiff;*.png;*.jpg;*.jpeg;*.bmp)|*.nii;*.nii.gz;*.tif;*.tiff;*.png;*.jpg;*.jpeg;*.bmp|NIfTI Files (*.nii;*.nii.gz)|*.nii;*.nii.gz|Image Files (*.tif;*.tiff;*.png;*.jpg;*.jpeg;*.bmp)|*.tif;*.tiff;*.png;*.jpg;*.jpeg;*.bmp|All Files (*.*)|*.*||"));
+	if (dlg.DoModal() == IDOK)
+	{
+		OpenDocumentFile(dlg.GetPathName());
+	}
 }
 
 // C大作业App 自定义加载/保存方法
