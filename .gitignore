@@ -52,6 +52,7 @@ results/**
 !results/.gitkeep
 outputs/
 logs/
+report/figures/
 
 # Temporary files
 *.tmp
