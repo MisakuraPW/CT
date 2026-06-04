@@ -1,5 +1,17 @@
 # 医学图像处理大作业
 
+## 当前实现状态
+
+当前仓库已经不只是项目规划：基础 MFC/OpenCV 工程、2D 图像处理、NIfTI 3D 体数据读取、肺部分割、指标计算、感染负荷分析、当前数据批处理、配置数据集批处理、报告统计图和素材收集链条均已接入。
+
+建议先阅读：
+
+- `docs/CURRENT_WORKFLOW.md`：当前可运行流程与验收清单。
+- `docs/PROJECT_SETUP.md`：Git、OpenCV、本地路径配置。
+- `docs/DATASET_LAYOUT.md`：数据集目录和路径配置说明。
+
+注意：完整 Kaggle 数据集、`configs/paths.local.ini`、`configs/opencv.local.props`、`results/` 和 `report/figures/` 不提交到 Git。
+
 ## 项目名称
 
 基于传统图像处理的胸部 CT 肺实质分割与 COVID-19 感染负荷定量分析
