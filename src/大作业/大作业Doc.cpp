@@ -12,6 +12,7 @@
 
 #include "大作业Doc.h"
 
+#include "BatchProcessor.h"
 #include "CsvExporter.h"
 #include "ImageIO.h"
 #include "InfectionAnalyzer.h"
@@ -92,6 +93,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnShowInfectionOverlay)
 	ON_COMMAND(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnPreviousSlice)
 	ON_COMMAND(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnNextSlice)
+	ON_COMMAND(ID_BATCH_PROCESS_CURRENT_VOLUME, &C大作业Doc::OnBatchProcessCurrentVolume)
 	ON_UPDATE_COMMAND_UI(ID_IMAGE_OPEN_MASK, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_IMAGE_OPEN_INFECTION_MASK, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_PROCESS_RUN_SEGMENTATION, &C大作业Doc::OnUpdateHasOriginal)
@@ -111,6 +113,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnUpdateHasInfectionStats)
 	ON_UPDATE_COMMAND_UI(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnUpdateCanPreviousSlice)
 	ON_UPDATE_COMMAND_UI(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnUpdateCanNextSlice)
+	ON_UPDATE_COMMAND_UI(ID_BATCH_PROCESS_CURRENT_VOLUME, &C大作业Doc::OnUpdateCanBatchProcessCurrentData)
 END_MESSAGE_MAP()
 
 
@@ -339,6 +342,11 @@ BOOL C大作业Doc::CanMoveToPreviousSlice() const
 BOOL C大作业Doc::CanMoveToNextSlice() const
 {
 	return HasVolume() && m_currentSliceIndex + 1 < m_sourceVolume.depth;
+}
+
+BOOL C大作业Doc::CanBatchProcessCurrentData() const
+{
+	return HasOriginalImage();
 }
 
 BOOL C大作业Doc::LoadSourceImage(const CString& pathName)
@@ -789,6 +797,77 @@ void C大作业Doc::OnNextSlice()
 	ApplyCurrentSlice();
 }
 
+void C大作业Doc::OnBatchProcessCurrentVolume()
+{
+	if (!CanBatchProcessCurrentData())
+	{
+		AfxMessageBox(_T("请先打开 CT 图像或 3D 体数据。"));
+		return;
+	}
+
+	CFolderPickerDialog dlg(nullptr, OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST);
+	dlg.m_ofn.lpstrTitle = _T("选择批量处理输出目录");
+	if (dlg.DoModal() != IDOK)
+	{
+		return;
+	}
+
+	std::vector<cv::Mat> sourceSlices;
+	std::vector<cv::Mat> gtMaskSlices;
+	std::vector<cv::Mat> infectionMaskSlices;
+
+	if (!m_sourceVolume.slices.empty())
+	{
+		sourceSlices = m_sourceVolume.slices;
+	}
+	else if (!m_originalImage.empty())
+	{
+		sourceSlices.push_back(m_originalImage);
+	}
+
+	if (!m_manualMaskVolume.slices.empty())
+	{
+		gtMaskSlices = m_manualMaskVolume.slices;
+	}
+	else if (!m_manualMask.empty())
+	{
+		gtMaskSlices.push_back(m_manualMask);
+	}
+
+	if (!m_infectionMaskVolume.slices.empty())
+	{
+		infectionMaskSlices = m_infectionMaskVolume.slices;
+	}
+	else if (!m_infectionMask.empty())
+	{
+		infectionMaskSlices.push_back(m_infectionMask);
+	}
+
+	BatchOptions options;
+	options.outputRoot = dlg.GetPathName().GetString();
+	options.caseName = GetSourceFileName();
+	options.saveIntermediate = true;
+
+	CWaitCursor wait;
+	CBatchProcessor processor;
+	BatchProcessResult result;
+	CString error;
+	if (!processor.ProcessSlices(sourceSlices, gtMaskSlices, infectionMaskSlices, options, result, error))
+	{
+		AfxMessageBox(error);
+		return;
+	}
+
+	CString message;
+	message.Format(_T("批量处理完成。\r\n总切片数: %d\r\n成功处理: %d\r\n计算指标切片: %d\r\n感染统计切片: %d\r\n\r\n汇总 CSV:\r\n%s"),
+		result.totalSlices,
+		result.processedSlices,
+		result.metricSlices,
+		result.infectionSlices,
+		result.summaryCsvPath.GetString());
+	AfxMessageBox(message);
+}
+
 void C大作业Doc::OnUpdateHasOriginal(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(HasOriginalImage());
@@ -837,4 +916,9 @@ void C大作业Doc::OnUpdateCanPreviousSlice(CCmdUI* pCmdUI)
 void C大作业Doc::OnUpdateCanNextSlice(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(CanMoveToNextSlice());
+}
+
+void C大作业Doc::OnUpdateCanBatchProcessCurrentData(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(CanBatchProcessCurrentData());
 }

@@ -47,6 +47,7 @@ public:
 	BOOL HasVolume() const;
 	BOOL CanMoveToPreviousSlice() const;
 	BOOL CanMoveToNextSlice() const;
+	BOOL CanBatchProcessCurrentData() const;
 
 // 重写
 public:
@@ -117,6 +118,7 @@ protected:
 	afx_msg void OnShowInfectionOverlay();
 	afx_msg void OnPreviousSlice();
 	afx_msg void OnNextSlice();
+	afx_msg void OnBatchProcessCurrentVolume();
 	afx_msg void OnUpdateHasOriginal(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasSegmentation(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasFinalAndMask(CCmdUI* pCmdUI);
@@ -127,6 +129,7 @@ protected:
 	afx_msg void OnUpdateHasInfectionStats(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCanPreviousSlice(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCanNextSlice(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateCanBatchProcessCurrentData(CCmdUI* pCmdUI);
 	DECLARE_MESSAGE_MAP()
 
 #ifdef SHARED_HANDLERS

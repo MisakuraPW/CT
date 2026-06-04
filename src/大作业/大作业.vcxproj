@@ -196,6 +196,7 @@
   <ItemGroup>
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="ClassView.h" />
+    <ClInclude Include="BatchProcessor.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="CsvExporter.h" />
@@ -218,6 +219,7 @@
   <ItemGroup>
     <ClCompile Include="ChildFrm.cpp" />
     <ClCompile Include="ClassView.cpp" />
+    <ClCompile Include="BatchProcessor.cpp" />
     <ClCompile Include="FileView.cpp" />
     <ClCompile Include="CsvExporter.cpp" />
     <ClCompile Include="ImageIO.cpp" />

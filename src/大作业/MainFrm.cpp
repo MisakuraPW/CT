@@ -172,6 +172,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	lstBasicCommands.AddTail(ID_PROCESS_RUN_SEGMENTATION);
 	lstBasicCommands.AddTail(ID_ANALYSIS_CALCULATE_METRICS);
 	lstBasicCommands.AddTail(ID_ANALYSIS_INFECTION_BURDEN);
+	lstBasicCommands.AddTail(ID_BATCH_PROCESS_CURRENT_VOLUME);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_ORIGINAL);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_GRAY);
 	lstBasicCommands.AddTail(ID_VIEW_SHOW_THRESHOLD);
