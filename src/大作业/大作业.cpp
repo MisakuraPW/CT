@@ -12,6 +12,8 @@
 #include "ChildFrm.h"
 #include "大作业Doc.h"
 #include "大作业View.h"
+#include "AppConfig.h"
+#include "DatasetScanner.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -25,6 +27,7 @@ BEGIN_MESSAGE_MAP(C大作业App, CWinAppEx)
 	// 基于文件的标准文档命令
 	ON_COMMAND(ID_FILE_NEW, &CWinAppEx::OnFileNew)
 	ON_COMMAND(ID_FILE_OPEN, &C大作业App::OnFileOpen)
+	ON_COMMAND(ID_DATASET_SCAN_TASKS, &C大作业App::OnDatasetScanTasks)
 	// 标准打印设置命令
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
 END_MESSAGE_MAP()
@@ -208,6 +211,53 @@ void C大作业App::OnFileOpen()
 	{
 		OpenDocumentFile(dlg.GetPathName());
 	}
+}
+
+void C大作业App::OnDatasetScanTasks()
+{
+	AppConfig config;
+	CString errorMessage;
+	if (!CAppConfigLoader::LoadDefault(config, errorMessage))
+	{
+		AfxMessageBox(errorMessage, MB_ICONWARNING);
+		return;
+	}
+
+	CDatasetScanner scanner;
+	DatasetScanResult result;
+	if (!scanner.Scan(config.lungDatasetRoot, config.covidDatasetRoot, result, errorMessage))
+	{
+		AfxMessageBox(errorMessage, MB_ICONWARNING);
+		return;
+	}
+
+	CString outputPath = config.resultRoot;
+	outputPath.Replace(_T('/'), _T('\\'));
+	if (!outputPath.IsEmpty())
+	{
+		const TCHAR tail = outputPath[outputPath.GetLength() - 1];
+		if (tail != _T('\\'))
+		{
+			outputPath += _T("\\");
+		}
+	}
+	outputPath += _T("dataset_tasks.csv");
+
+	if (!scanner.ExportTaskListCsv(outputPath, result, errorMessage))
+	{
+		AfxMessageBox(errorMessage, MB_ICONERROR);
+		return;
+	}
+
+	CString summary;
+	summary.Format(
+		_T("数据集任务扫描完成。\n\nFinding Lungs 2D: %d\nFinding Lungs 3D: %d\nCOVID-19 CT: %d\n缺失标注: %d\n\n任务清单已写入：\n%s"),
+		result.finding2DCount,
+		result.finding3DCount,
+		result.covidCount,
+		result.missingMaskCount,
+		outputPath.GetString());
+	AfxMessageBox(summary, MB_ICONINFORMATION);
 }
 
 // C大作业App 自定义加载/保存方法
