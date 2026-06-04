@@ -58,6 +58,8 @@ logs/
 *.cache
 *.bak
 *.orig
+__pycache__/
+*.pyc
 
 # IDEs
 .idea/
