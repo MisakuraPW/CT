@@ -21,6 +21,8 @@ enum class DisplayImageKind
 	Morphology,
 	FinalMask,
 	ManualMask,
+	ConnectedColorMap,
+	MaskComparisonOverlay,
 	InfectionMask,
 	InfectionOverlay
 };
@@ -42,6 +44,8 @@ public:
 	BOOL HasFinalMask() const;
 	BOOL HasManualMask() const;
 	BOOL HasInfectionMask() const;
+	BOOL HasConnectedColorMap() const;
+	BOOL HasMaskComparisonOverlay() const;
 	BOOL HasMetrics() const;
 	BOOL HasInfectionStats() const;
 	BOOL HasVolume() const;
@@ -71,6 +75,8 @@ protected:
 	cv::Mat m_originalImage;
 	cv::Mat m_manualMask;
 	cv::Mat m_infectionMask;
+	cv::Mat m_connectedColorMap;
+	cv::Mat m_maskComparisonOverlay;
 	cv::Mat m_infectionOverlay;
 	NiftiVolume m_sourceVolume;
 	NiftiVolume m_manualMaskVolume;
@@ -114,6 +120,8 @@ protected:
 	afx_msg void OnShowMorphology();
 	afx_msg void OnShowFinalMask();
 	afx_msg void OnShowManualMask();
+	afx_msg void OnShowConnectedColorMap();
+	afx_msg void OnShowMaskComparisonOverlay();
 	afx_msg void OnShowInfectionMask();
 	afx_msg void OnShowInfectionOverlay();
 	afx_msg void OnPreviousSlice();
@@ -123,6 +131,8 @@ protected:
 	afx_msg void OnUpdateHasSegmentation(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasFinalAndMask(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasManualMask(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasConnectedColorMap(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasMaskComparisonOverlay(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasInfectionMask(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasFinalAndInfection(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasMetrics(CCmdUI* pCmdUI);

@@ -209,6 +209,7 @@
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MetricsCalculator.h" />
     <ClInclude Include="NiftiIO.h" />
+    <ClInclude Include="OverlayVisualizer.h" />
     <ClInclude Include="OutputWnd.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PropertiesWnd.h" />
@@ -234,6 +235,7 @@
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MetricsCalculator.cpp" />
     <ClCompile Include="NiftiIO.cpp" />
+    <ClCompile Include="OverlayVisualizer.cpp" />
     <ClCompile Include="OutputWnd.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

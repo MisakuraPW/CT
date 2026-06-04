@@ -5,6 +5,7 @@
 #include "InfectionAnalyzer.h"
 #include "LungSegmenter.h"
 #include "MetricsCalculator.h"
+#include "OverlayVisualizer.h"
 
 #include <Windows.h>
 
@@ -79,6 +80,9 @@ bool CBatchProcessor::ProcessSlices(
             continue;
         }
 
+        COverlayVisualizer visualizer;
+        const cv::Mat connectedColorMap = visualizer.MakeConnectedComponentColorMap(segmentation.thresholdMask);
+        cv::Mat maskComparisonOverlay;
         cv::Mat infectionOverlay;
         if (i < infectionMaskSlices.size() && !infectionMaskSlices[i].empty())
         {
@@ -93,6 +97,7 @@ bool CBatchProcessor::ProcessSlices(
         {
             const cv::Mat gtMask = NormalizeMask(gtMaskSlices[i], segmentation.finalMask.size());
             metricsRows[i] = metricsCalculator.Calculate(segmentation.finalMask, gtMask);
+            maskComparisonOverlay = visualizer.MakeComparisonOverlay(sourceSlices[i], segmentation.finalMask, gtMask);
             hasMetrics[i] = true;
             ++result.metricSlices;
         }
@@ -104,6 +109,8 @@ bool CBatchProcessor::ProcessSlices(
             segmentation.thresholdMask,
             segmentation.connectedMask,
             segmentation.morphologyMask,
+            connectedColorMap,
+            maskComparisonOverlay,
             infectionOverlay,
             options.saveIntermediate))
         {
@@ -161,6 +168,8 @@ bool CBatchProcessor::SaveSliceImages(
     const cv::Mat& thresholdMask,
     const cv::Mat& connectedMask,
     const cv::Mat& morphologyMask,
+    const cv::Mat& connectedColorMap,
+    const cv::Mat& maskComparisonOverlay,
     const cv::Mat& infectionOverlay,
     bool saveIntermediate) const
 {
@@ -186,6 +195,18 @@ bool CBatchProcessor::SaveSliceImages(
         {
             return false;
         }
+    }
+
+    if (!connectedColorMap.empty() &&
+        !ImageIO::SaveImage(JoinPath(JoinPath(outputRoot, L"overlays"), SliceName(sliceIndex, L"_components_color.png")), connectedColorMap))
+    {
+        return false;
+    }
+
+    if (!maskComparisonOverlay.empty() &&
+        !ImageIO::SaveImage(JoinPath(JoinPath(outputRoot, L"overlays"), SliceName(sliceIndex, L"_mask_comparison.png")), maskComparisonOverlay))
+    {
+        return false;
     }
 
     if (!infectionOverlay.empty())

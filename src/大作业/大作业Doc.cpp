@@ -19,6 +19,7 @@
 #include "LungSegmenter.h"
 #include "MetricsCalculator.h"
 #include "NiftiIO.h"
+#include "OverlayVisualizer.h"
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
@@ -89,6 +90,8 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_VIEW_SHOW_MORPHOLOGY, &C大作业Doc::OnShowMorphology)
 	ON_COMMAND(ID_VIEW_SHOW_FINAL_MASK, &C大作业Doc::OnShowFinalMask)
 	ON_COMMAND(ID_VIEW_SHOW_MANUAL_MASK, &C大作业Doc::OnShowManualMask)
+	ON_COMMAND(ID_VIEW_SHOW_CONNECTED_COLORMAP, &C大作业Doc::OnShowConnectedColorMap)
+	ON_COMMAND(ID_VIEW_SHOW_MASK_COMPARISON, &C大作业Doc::OnShowMaskComparisonOverlay)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_MASK, &C大作业Doc::OnShowInfectionMask)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnShowInfectionOverlay)
 	ON_COMMAND(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnPreviousSlice)
@@ -109,6 +112,8 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_MORPHOLOGY, &C大作业Doc::OnUpdateHasSegmentation)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_FINAL_MASK, &C大作业Doc::OnUpdateHasSegmentation)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_MANUAL_MASK, &C大作业Doc::OnUpdateHasManualMask)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_CONNECTED_COLORMAP, &C大作业Doc::OnUpdateHasConnectedColorMap)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_MASK_COMPARISON, &C大作业Doc::OnUpdateHasMaskComparisonOverlay)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_MASK, &C大作业Doc::OnUpdateHasInfectionMask)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnUpdateHasInfectionStats)
 	ON_UPDATE_COMMAND_UI(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnUpdateCanPreviousSlice)
@@ -257,6 +262,10 @@ const cv::Mat& C大作业Doc::GetDisplayImage() const
 		return m_segmentationResult.finalMask.empty() ? m_originalImage : m_segmentationResult.finalMask;
 	case DisplayImageKind::ManualMask:
 		return m_manualMask.empty() ? m_originalImage : m_manualMask;
+	case DisplayImageKind::ConnectedColorMap:
+		return m_connectedColorMap.empty() ? m_originalImage : m_connectedColorMap;
+	case DisplayImageKind::MaskComparisonOverlay:
+		return m_maskComparisonOverlay.empty() ? m_originalImage : m_maskComparisonOverlay;
 	case DisplayImageKind::InfectionMask:
 		return m_infectionMask.empty() ? m_originalImage : m_infectionMask;
 	case DisplayImageKind::InfectionOverlay:
@@ -289,6 +298,10 @@ CString C大作业Doc::GetDisplayName() const
 		return prefix + _T("最终肺部 mask");
 	case DisplayImageKind::ManualMask:
 		return prefix + _T("人工 mask");
+	case DisplayImageKind::ConnectedColorMap:
+		return prefix + _T("连通域伪彩色图");
+	case DisplayImageKind::MaskComparisonOverlay:
+		return prefix + _T("预测/人工 mask 对比叠加图");
 	case DisplayImageKind::InfectionMask:
 		return prefix + _T("感染 mask");
 	case DisplayImageKind::InfectionOverlay:
@@ -317,6 +330,16 @@ BOOL C大作业Doc::HasManualMask() const
 BOOL C大作业Doc::HasInfectionMask() const
 {
 	return !m_infectionMask.empty();
+}
+
+BOOL C大作业Doc::HasConnectedColorMap() const
+{
+	return !m_connectedColorMap.empty();
+}
+
+BOOL C大作业Doc::HasMaskComparisonOverlay() const
+{
+	return !m_maskComparisonOverlay.empty();
 }
 
 BOOL C大作业Doc::HasMetrics() const
@@ -408,6 +431,7 @@ BOOL C大作业Doc::LoadManualMask(const CString& pathName)
 	m_manualMask = NormalizeBinaryMaskForDoc(m_manualMask);
 	m_manualMaskPath = pathName;
 	m_hasMetrics = FALSE;
+	m_maskComparisonOverlay.release();
 	SetDisplayKind(DisplayImageKind::ManualMask);
 	return TRUE;
 }
@@ -485,6 +509,8 @@ void C大作业Doc::ApplyCurrentSlice()
 void C大作业Doc::ClearSliceDerivedResults()
 {
 	m_segmentationResult = LungSegmentationResult{};
+	m_connectedColorMap.release();
+	m_maskComparisonOverlay.release();
 	m_infectionOverlay.release();
 	m_lastMetrics = SegmentationMetrics{};
 	m_lastInfectionStats = InfectionStats{};
@@ -497,6 +523,8 @@ void C大作业Doc::ClearImages()
 	m_originalImage.release();
 	m_manualMask.release();
 	m_infectionMask.release();
+	m_connectedColorMap.release();
+	m_maskComparisonOverlay.release();
 	m_infectionOverlay.release();
 	m_sourceVolume = NiftiVolume{};
 	m_manualMaskVolume = NiftiVolume{};
@@ -595,6 +623,9 @@ void C大作业Doc::OnRunLungSegmentation()
 		return;
 	}
 
+	COverlayVisualizer visualizer;
+	m_connectedColorMap = visualizer.MakeConnectedComponentColorMap(m_segmentationResult.thresholdMask);
+	m_maskComparisonOverlay.release();
 	m_hasMetrics = FALSE;
 	m_hasInfectionStats = FALSE;
 	m_infectionOverlay.release();
@@ -612,6 +643,8 @@ void C大作业Doc::OnCalculateMetrics()
 
 	CMetricsCalculator calculator;
 	m_lastMetrics = calculator.Calculate(m_segmentationResult.finalMask, m_manualMask);
+	COverlayVisualizer visualizer;
+	m_maskComparisonOverlay = visualizer.MakeComparisonOverlay(m_originalImage, m_segmentationResult.finalMask, m_manualMask);
 	m_hasMetrics = TRUE;
 
 	CString message;
@@ -765,6 +798,16 @@ void C大作业Doc::OnShowManualMask()
 	SetDisplayKind(DisplayImageKind::ManualMask);
 }
 
+void C大作业Doc::OnShowConnectedColorMap()
+{
+	SetDisplayKind(DisplayImageKind::ConnectedColorMap);
+}
+
+void C大作业Doc::OnShowMaskComparisonOverlay()
+{
+	SetDisplayKind(DisplayImageKind::MaskComparisonOverlay);
+}
+
 void C大作业Doc::OnShowInfectionMask()
 {
 	SetDisplayKind(DisplayImageKind::InfectionMask);
@@ -886,6 +929,16 @@ void C大作业Doc::OnUpdateHasFinalAndMask(CCmdUI* pCmdUI)
 void C大作业Doc::OnUpdateHasManualMask(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(HasManualMask());
+}
+
+void C大作业Doc::OnUpdateHasConnectedColorMap(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasConnectedColorMap());
+}
+
+void C大作业Doc::OnUpdateHasMaskComparisonOverlay(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasMaskComparisonOverlay());
 }
 
 void C大作业Doc::OnUpdateHasInfectionMask(CCmdUI* pCmdUI)

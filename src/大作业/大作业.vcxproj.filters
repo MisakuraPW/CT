@@ -87,6 +87,9 @@
     <ClInclude Include="DatasetBatchRunner.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="OverlayVisualizer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="大作业.cpp">
@@ -150,6 +153,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="DatasetBatchRunner.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="OverlayVisualizer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

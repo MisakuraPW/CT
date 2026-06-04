@@ -44,6 +44,8 @@ private:
         const cv::Mat& thresholdMask,
         const cv::Mat& connectedMask,
         const cv::Mat& morphologyMask,
+        const cv::Mat& connectedColorMap,
+        const cv::Mat& maskComparisonOverlay,
         const cv::Mat& infectionOverlay,
         bool saveIntermediate) const;
     bool WriteSummaryCsv(
