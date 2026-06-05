@@ -122,6 +122,7 @@ protected:
 	afx_msg void OnOpenManualMask();
 	afx_msg void OnOpenInfectionMask();
 	afx_msg void OnRunLungSegmentation();
+	afx_msg void OnSegmentInfection();
 	afx_msg void OnCalculateMetrics();
 	afx_msg void OnAnalyzeInfectionBurden();
 	afx_msg void OnSaveCurrentResult();
@@ -157,6 +158,7 @@ protected:
 	afx_msg void OnUpdateHasMedianImage(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasClaheImage(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasSegmentation(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasFinalMask(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasFinalAndMask(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasManualMask(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasConnectedColorMap(CCmdUI* pCmdUI);

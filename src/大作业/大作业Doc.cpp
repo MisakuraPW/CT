@@ -17,6 +17,7 @@
 #include "CsvExporter.h"
 #include "ImageIO.h"
 #include "InfectionAnalyzer.h"
+#include "InfectionSegmenter.h"
 #include "LungSegmenter.h"
 #include "MetricsCalculator.h"
 #include "NiftiIO.h"
@@ -88,6 +89,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_IMAGE_OPEN_MASK, &C大作业Doc::OnOpenManualMask)
 	ON_COMMAND(ID_IMAGE_OPEN_INFECTION_MASK, &C大作业Doc::OnOpenInfectionMask)
 	ON_COMMAND(ID_PROCESS_RUN_SEGMENTATION, &C大作业Doc::OnRunLungSegmentation)
+	ON_COMMAND(ID_PROCESS_SEGMENT_INFECTION, &C大作业Doc::OnSegmentInfection)
 	ON_COMMAND(ID_ANALYSIS_CALCULATE_METRICS, &C大作业Doc::OnCalculateMetrics)
 	ON_COMMAND(ID_ANALYSIS_INFECTION_BURDEN, &C大作业Doc::OnAnalyzeInfectionBurden)
 	ON_COMMAND(ID_RESULT_SAVE_CURRENT, &C大作业Doc::OnSaveCurrentResult)
@@ -119,6 +121,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_IMAGE_OPEN_MASK, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_IMAGE_OPEN_INFECTION_MASK, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_PROCESS_RUN_SEGMENTATION, &C大作业Doc::OnUpdateHasOriginal)
+	ON_UPDATE_COMMAND_UI(ID_PROCESS_SEGMENT_INFECTION, &C大作业Doc::OnUpdateHasFinalMask)
 	ON_UPDATE_COMMAND_UI(ID_ANALYSIS_CALCULATE_METRICS, &C大作业Doc::OnUpdateHasFinalAndMask)
 	ON_UPDATE_COMMAND_UI(ID_ANALYSIS_INFECTION_BURDEN, &C大作业Doc::OnUpdateHasFinalAndInfection)
 	ON_UPDATE_COMMAND_UI(ID_RESULT_SAVE_CURRENT, &C大作业Doc::OnUpdateHasOriginal)
@@ -718,6 +721,32 @@ void C大作业Doc::OnRunLungSegmentation()
 	AfxMessageBox(_T("肺部分割完成。可在“视图”菜单切换查看中间结果。"));
 }
 
+void C大作业Doc::OnSegmentInfection()
+{
+	if (m_segmentationResult.finalMask.empty())
+	{
+		AfxMessageBox(_T("请先执行“一键肺部分割”。"));
+		return;
+	}
+
+	CWaitCursor wait;
+	CInfectionSegmenter segmenter;
+	InfectionSegmentationResult result = segmenter.Segment(
+		m_originalImage, m_segmentationResult.finalMask);
+
+	if (result.infectionMask.empty())
+	{
+		AfxMessageBox(_T("感染区域分割失败。"));
+		return;
+	}
+
+	m_infectionMask = result.infectionMask.clone();
+	m_hasInfectionStats = FALSE;
+	m_infectionOverlay.release();
+	SetDisplayKind(DisplayImageKind::InfectionMask);
+	AfxMessageBox(_T("感染区域分割完成。可在“视图”菜单查看感染 mask 和叠加图，\n也可在“分析”菜单执行感染负荷分析。"));
+}
+
 void C大作业Doc::OnCalculateMetrics()
 {
 	if (m_segmentationResult.finalMask.empty() || m_manualMask.empty())
@@ -1117,6 +1146,11 @@ void C大作业Doc::OnUpdateHasClaheImage(CCmdUI* pCmdUI)
 }
 
 void C大作业Doc::OnUpdateHasSegmentation(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasFinalMask());
+}
+
+void C大作业Doc::OnUpdateHasFinalMask(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(HasFinalMask());
 }
