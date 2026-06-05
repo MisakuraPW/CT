@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>18.0</VCProjectVersion>
+    <VCProjectVersion>17.0</VCProjectVersion>
     <ProjectGuid>{145536B0-F09A-A2DA-D42C-838DA245FB3B}</ProjectGuid>
     <Keyword>MFCProj</Keyword>
     <RootNamespace>大作业</RootNamespace>
