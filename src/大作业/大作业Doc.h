@@ -28,7 +28,8 @@ enum class DisplayImageKind
 	ConnectedColorMap,
 	MaskComparisonOverlay,
 	InfectionMask,
-	InfectionOverlay
+	InfectionOverlay,
+	InfectionSegmentationMask
 };
 
 class C大作业Doc : public CDocument
@@ -53,14 +54,17 @@ public:
 	BOOL HasFinalMask() const;
 	BOOL HasManualMask() const;
 	BOOL HasInfectionMask() const;
+	BOOL HasInfectionSegmentationMask() const;
 	BOOL HasConnectedColorMap() const;
 	BOOL HasMaskComparisonOverlay() const;
 	BOOL HasMetrics() const;
 	BOOL HasInfectionStats() const;
+	BOOL HasInfectionMetrics() const;
 	BOOL HasVolume() const;
 	BOOL CanMoveToPreviousSlice() const;
 	BOOL CanMoveToNextSlice() const;
 	BOOL CanBatchProcessCurrentData() const;
+	BOOL CanCalculateInfectionMetrics() const;
 
 // 重写
 public:
@@ -89,6 +93,7 @@ protected:
 	cv::Mat m_claheImage;
 	cv::Mat m_manualMask;
 	cv::Mat m_infectionMask;
+	cv::Mat m_infectionSegmentationMask;
 	cv::Mat m_connectedColorMap;
 	cv::Mat m_maskComparisonOverlay;
 	cv::Mat m_infectionOverlay;
@@ -103,8 +108,10 @@ protected:
 	CString m_infectionMaskPath;
 	SegmentationMetrics m_lastMetrics;
 	InfectionStats m_lastInfectionStats;
+	SegmentationMetrics m_lastInfectionMetrics;
 	BOOL m_hasMetrics = FALSE;
 	BOOL m_hasInfectionStats = FALSE;
+	BOOL m_hasInfectionMetrics = FALSE;
 
 	BOOL LoadSourceImage(const CString& pathName);
 	BOOL LoadManualMask(const CString& pathName);
@@ -125,6 +132,7 @@ protected:
 	afx_msg void OnSegmentInfection();
 	afx_msg void OnCalculateMetrics();
 	afx_msg void OnAnalyzeInfectionBurden();
+	afx_msg void OnCalculateInfectionMetrics();
 	afx_msg void OnSaveCurrentResult();
 	afx_msg void OnExportMetricsCsv();
 	afx_msg void OnExportInfectionCsv();
@@ -148,6 +156,7 @@ protected:
 	afx_msg void OnShowMaskComparisonOverlay();
 	afx_msg void OnShowInfectionMask();
 	afx_msg void OnShowInfectionOverlay();
+	afx_msg void OnShowInfectionSegmentationMask();
 	afx_msg void OnPreviousSlice();
 	afx_msg void OnNextSlice();
 	afx_msg void OnBatchProcessCurrentVolume();
@@ -164,9 +173,11 @@ protected:
 	afx_msg void OnUpdateHasConnectedColorMap(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasMaskComparisonOverlay(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasInfectionMask(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasInfectionSegmentationMask(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasFinalAndInfection(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasMetrics(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasInfectionStats(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasInfectionMetrics(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCanPreviousSlice(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCanNextSlice(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCanBatchProcessCurrentData(CCmdUI* pCmdUI);

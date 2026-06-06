@@ -92,6 +92,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_PROCESS_SEGMENT_INFECTION, &C大作业Doc::OnSegmentInfection)
 	ON_COMMAND(ID_ANALYSIS_CALCULATE_METRICS, &C大作业Doc::OnCalculateMetrics)
 	ON_COMMAND(ID_ANALYSIS_INFECTION_BURDEN, &C大作业Doc::OnAnalyzeInfectionBurden)
+	ON_COMMAND(ID_ANALYSIS_CALCULATE_INFECTION_METRICS, &C大作业Doc::OnCalculateInfectionMetrics)
 	ON_COMMAND(ID_RESULT_SAVE_CURRENT, &C大作业Doc::OnSaveCurrentResult)
 	ON_COMMAND(ID_RESULT_EXPORT_METRICS_CSV, &C大作业Doc::OnExportMetricsCsv)
 	ON_COMMAND(ID_RESULT_EXPORT_INFECTION_CSV, &C大作业Doc::OnExportInfectionCsv)
@@ -115,6 +116,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_VIEW_SHOW_MASK_COMPARISON, &C大作业Doc::OnShowMaskComparisonOverlay)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_MASK, &C大作业Doc::OnShowInfectionMask)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnShowInfectionOverlay)
+	ON_COMMAND(ID_VIEW_SHOW_INFECTION_SEGMENTATION_MASK, &C大作业Doc::OnShowInfectionSegmentationMask)
 	ON_COMMAND(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnPreviousSlice)
 	ON_COMMAND(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnNextSlice)
 	ON_COMMAND(ID_BATCH_PROCESS_CURRENT_VOLUME, &C大作业Doc::OnBatchProcessCurrentVolume)
@@ -124,6 +126,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_PROCESS_SEGMENT_INFECTION, &C大作业Doc::OnUpdateHasFinalMask)
 	ON_UPDATE_COMMAND_UI(ID_ANALYSIS_CALCULATE_METRICS, &C大作业Doc::OnUpdateHasFinalAndMask)
 	ON_UPDATE_COMMAND_UI(ID_ANALYSIS_INFECTION_BURDEN, &C大作业Doc::OnUpdateHasFinalAndInfection)
+	ON_UPDATE_COMMAND_UI(ID_ANALYSIS_CALCULATE_INFECTION_METRICS, &C大作业Doc::OnUpdateHasInfectionMetrics)
 	ON_UPDATE_COMMAND_UI(ID_RESULT_SAVE_CURRENT, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_RESULT_EXPORT_METRICS_CSV, &C大作业Doc::OnUpdateHasMetrics)
 	ON_UPDATE_COMMAND_UI(ID_RESULT_EXPORT_INFECTION_CSV, &C大作业Doc::OnUpdateHasInfectionStats)
@@ -146,6 +149,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_CONNECTED_COLORMAP, &C大作业Doc::OnUpdateHasConnectedColorMap)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_MASK_COMPARISON, &C大作业Doc::OnUpdateHasMaskComparisonOverlay)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_MASK, &C大作业Doc::OnUpdateHasInfectionMask)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_SEGMENTATION_MASK, &C大作业Doc::OnUpdateHasInfectionSegmentationMask)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnUpdateHasInfectionStats)
 	ON_UPDATE_COMMAND_UI(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnUpdateCanPreviousSlice)
 	ON_UPDATE_COMMAND_UI(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnUpdateCanNextSlice)
@@ -313,6 +317,8 @@ const cv::Mat& C大作业Doc::GetDisplayImage() const
 		return m_infectionMask.empty() ? m_originalImage : m_infectionMask;
 	case DisplayImageKind::InfectionOverlay:
 		return m_infectionOverlay.empty() ? m_originalImage : m_infectionOverlay;
+	case DisplayImageKind::InfectionSegmentationMask:
+		return m_infectionSegmentationMask.empty() ? m_originalImage : m_infectionSegmentationMask;
 	case DisplayImageKind::Original:
 	default:
 		return m_originalImage;
@@ -357,6 +363,8 @@ CString C大作业Doc::GetDisplayName() const
 		return prefix + _T("感染 mask");
 	case DisplayImageKind::InfectionOverlay:
 		return prefix + _T("感染区域叠加图");
+	case DisplayImageKind::InfectionSegmentationMask:
+		return prefix + _T("感染分割 mask");
 	case DisplayImageKind::Original:
 	default:
 		return prefix + _T("原始图像");
@@ -408,6 +416,11 @@ BOOL C大作业Doc::HasInfectionMask() const
 	return !m_infectionMask.empty();
 }
 
+BOOL C大作业Doc::HasInfectionSegmentationMask() const
+{
+	return !m_infectionSegmentationMask.empty();
+}
+
 BOOL C大作业Doc::HasConnectedColorMap() const
 {
 	return !m_connectedColorMap.empty();
@@ -428,6 +441,11 @@ BOOL C大作业Doc::HasInfectionStats() const
 	return m_hasInfectionStats;
 }
 
+BOOL C大作业Doc::HasInfectionMetrics() const
+{
+	return m_hasInfectionMetrics;
+}
+
 BOOL C大作业Doc::HasVolume() const
 {
 	return m_sourceVolume.depth > 1;
@@ -446,6 +464,11 @@ BOOL C大作业Doc::CanMoveToNextSlice() const
 BOOL C大作业Doc::CanBatchProcessCurrentData() const
 {
 	return HasOriginalImage();
+}
+
+BOOL C大作业Doc::CanCalculateInfectionMetrics() const
+{
+	return HasInfectionSegmentationMask() && HasInfectionMask();
 }
 
 BOOL C大作业Doc::LoadSourceImage(const CString& pathName)
@@ -593,10 +616,13 @@ void C大作业Doc::ClearSliceDerivedResults()
 	m_connectedColorMap.release();
 	m_maskComparisonOverlay.release();
 	m_infectionOverlay.release();
+	m_infectionSegmentationMask.release();
 	m_lastMetrics = SegmentationMetrics{};
 	m_lastInfectionStats = InfectionStats{};
+	m_lastInfectionMetrics = SegmentationMetrics{};
 	m_hasMetrics = FALSE;
 	m_hasInfectionStats = FALSE;
+	m_hasInfectionMetrics = FALSE;
 }
 
 void C大作业Doc::ClearImages()
@@ -612,6 +638,7 @@ void C大作业Doc::ClearImages()
 	m_connectedColorMap.release();
 	m_maskComparisonOverlay.release();
 	m_infectionOverlay.release();
+	m_infectionSegmentationMask.release();
 	m_sourceVolume = NiftiVolume{};
 	m_manualMaskVolume = NiftiVolume{};
 	m_infectionMaskVolume = NiftiVolume{};
@@ -623,8 +650,10 @@ void C大作业Doc::ClearImages()
 	m_infectionMaskPath.Empty();
 	m_lastMetrics = SegmentationMetrics{};
 	m_lastInfectionStats = InfectionStats{};
+	m_lastInfectionMetrics = SegmentationMetrics{};
 	m_hasMetrics = FALSE;
 	m_hasInfectionStats = FALSE;
+	m_hasInfectionMetrics = FALSE;
 }
 
 void C大作业Doc::SetDisplayKind(DisplayImageKind kind)
@@ -740,10 +769,11 @@ void C大作业Doc::OnSegmentInfection()
 		return;
 	}
 
-	m_infectionMask = result.infectionMask.clone();
+	m_infectionSegmentationMask = result.infectionMask.clone();
 	m_hasInfectionStats = FALSE;
+	m_hasInfectionMetrics = FALSE;
 	m_infectionOverlay.release();
-	SetDisplayKind(DisplayImageKind::InfectionMask);
+	SetDisplayKind(DisplayImageKind::InfectionSegmentationMask);
 	AfxMessageBox(_T("感染区域分割完成。可在“视图”菜单查看感染 mask 和叠加图，\n也可在“分析”菜单执行感染负荷分析。"));
 }
 
@@ -801,6 +831,32 @@ void C大作业Doc::OnAnalyzeInfectionBurden()
 		m_lastInfectionStats.rightInfectionArea);
 
 	SetDisplayKind(DisplayImageKind::InfectionOverlay);
+	AfxMessageBox(message);
+}
+
+void C大作业Doc::OnCalculateInfectionMetrics()
+{
+	if (!HasInfectionSegmentationMask() || !HasInfectionMask())
+	{
+		AfxMessageBox(_T("请先执行感染区域分割，并打开感染 mask。"));
+		return;
+	}
+
+	CMetricsCalculator calculator;
+	m_lastInfectionMetrics = calculator.Calculate(m_infectionSegmentationMask, m_infectionMask);
+	m_hasInfectionMetrics = TRUE;
+
+	CString message;
+	message.Format(_T("感染区域 Dice / IoU:\r\n\r\nDice: %.4f\r\nIoU: %.4f\r\nPrecision: %.4f\r\nRecall: %.4f\r\nArea Error: %.4f\r\n\r\nTP: %lld\r\nFP: %lld\r\nTN: %lld\r\nFN: %lld"),
+		m_lastInfectionMetrics.dice,
+		m_lastInfectionMetrics.iou,
+		m_lastInfectionMetrics.precision,
+		m_lastInfectionMetrics.recall,
+		m_lastInfectionMetrics.areaError,
+		m_lastInfectionMetrics.tp,
+		m_lastInfectionMetrics.fp,
+		m_lastInfectionMetrics.tn,
+		m_lastInfectionMetrics.fn);
 	AfxMessageBox(message);
 }
 
@@ -1019,6 +1075,11 @@ void C大作业Doc::OnShowInfectionOverlay()
 	SetDisplayKind(DisplayImageKind::InfectionOverlay);
 }
 
+void C大作业Doc::OnShowInfectionSegmentationMask()
+{
+	SetDisplayKind(DisplayImageKind::InfectionSegmentationMask);
+}
+
 void C大作业Doc::OnPreviousSlice()
 {
 	if (!CanMoveToPreviousSlice())
@@ -1180,6 +1241,11 @@ void C大作业Doc::OnUpdateHasInfectionMask(CCmdUI* pCmdUI)
 	pCmdUI->Enable(HasInfectionMask());
 }
 
+void C大作业Doc::OnUpdateHasInfectionSegmentationMask(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasInfectionSegmentationMask());
+}
+
 void C大作业Doc::OnUpdateHasFinalAndInfection(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(HasFinalMask() && HasInfectionMask());
@@ -1193,6 +1259,11 @@ void C大作业Doc::OnUpdateHasMetrics(CCmdUI* pCmdUI)
 void C大作业Doc::OnUpdateHasInfectionStats(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(HasInfectionStats());
+}
+
+void C大作业Doc::OnUpdateHasInfectionMetrics(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(CanCalculateInfectionMetrics());
 }
 
 void C大作业Doc::OnUpdateCanPreviousSlice(CCmdUI* pCmdUI)
