@@ -89,6 +89,25 @@ cv::Mat CInfectionSegmenter::SegmentByHUThreshold(const cv::Mat& source,
 	size_t idx60 = static_cast<size_t>(lungPixels.size() * 0.60);
 	double threshold60 = lungPixels[idx60];
 
+	// ✅✅✅ 关键改进：使用固定阈值94二值化提取血管（用户验证有效的方法）
+	cv::Mat gray8bit;
+	if (gray.depth() != CV_8U) {
+		cv::normalize(gray, gray8bit, 0, 255, cv::NORM_MINMAX, CV_8U);
+	} else {
+		gray8bit = gray.clone();
+	}
+	
+	// 使用固定阈值94进行二值化提取血管和高亮组织
+	cv::Mat vesselMask(gray.size(), CV_8U, cv::Scalar(0));
+	cv::threshold(gray8bit, vesselMask, 94, 255, cv::THRESH_BINARY);
+	
+	// 只保留肺区内的血管
+	cv::bitwise_and(vesselMask, binaryLung, vesselMask);
+	
+	// 对血管掩码做适度膨胀，确保完全覆盖血管边界
+	cv::Mat k_vessel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
+	cv::dilate(vesselMask, vesselMask, k_vessel);
+
 	// 创建感染 mask
 	cv::Mat infection(gray.size(), CV_8U, cv::Scalar(0));
 	for (int r = 0; r < gray.rows; ++r)
@@ -99,7 +118,8 @@ cv::Mat CInfectionSegmenter::SegmentByHUThreshold(const cv::Mat& source,
 				continue;
 
 			double v = GetPixelValue(gray, r, c);
-			if (v > threshold60)
+			// ✅ 排除血管区域：只保留非血管的感染区域
+			if (v > threshold60 && vesselMask.at<uchar>(r, c) == 0)
 				infection.at<uchar>(r, c) = 255;
 		}
 	}
