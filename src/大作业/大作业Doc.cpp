@@ -643,6 +643,8 @@ void C大作业Doc::ApplyCurrentSlice()
 			m_infectionMask = NormalizeBinaryMaskForDoc(m_infectionMask);
 		}
 	}
+
+	UpdateAllViews(nullptr);
 }
 
 void C大作业Doc::ClearSliceDerivedResults()
