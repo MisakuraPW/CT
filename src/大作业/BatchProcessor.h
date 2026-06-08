@@ -6,8 +6,19 @@
 
 #include <opencv2/core.hpp>
 
+#include <functional>
 #include <string>
 #include <vector>
+
+struct BatchProgressInfo
+{
+    CString scopeName;
+    CString itemName;
+    int current = 0;
+    int total = 0;
+};
+
+using BatchProgressCallback = std::function<bool(const BatchProgressInfo&)>;
 
 struct BatchOptions
 {
@@ -15,6 +26,7 @@ struct BatchOptions
     CString caseName;
     bool saveIntermediate = true;
     LungSegmentationOptions segmentationOptions;
+    BatchProgressCallback progressCallback;
 };
 
 struct BatchProcessResult

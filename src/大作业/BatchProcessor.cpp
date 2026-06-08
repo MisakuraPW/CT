@@ -32,6 +32,33 @@ namespace
 
         return CreateDirectoryW(path.c_str(), nullptr) || GetLastError() == ERROR_ALREADY_EXISTS;
     }
+
+    bool ReportBatchProgress(
+        const BatchOptions& options,
+        const CString& scopeName,
+        const CString& itemName,
+        int current,
+        int total,
+        CString& errorMessage)
+    {
+        if (!options.progressCallback)
+        {
+            return true;
+        }
+
+        BatchProgressInfo info;
+        info.scopeName = scopeName;
+        info.itemName = itemName;
+        info.current = current;
+        info.total = total;
+        if (!options.progressCallback(info))
+        {
+            errorMessage = _T("用户已取消批处理。");
+            return false;
+        }
+
+        return true;
+    }
 }
 
 bool CBatchProcessor::ProcessSlices(
@@ -79,8 +106,18 @@ bool CBatchProcessor::ProcessSlices(
 
     result.totalSlices = static_cast<int>(sourceSlices.size());
 
+    if (!ReportBatchProgress(options, _T("切片处理"), options.caseName, 0, result.totalSlices, errorMessage))
+    {
+        return false;
+    }
+
     for (size_t i = 0; i < sourceSlices.size(); ++i)
     {
+        if (!ReportBatchProgress(options, _T("切片处理"), options.caseName, static_cast<int>(i), result.totalSlices, errorMessage))
+        {
+            return false;
+        }
+
         if (sourceSlices[i].empty())
         {
             continue;
@@ -131,6 +168,11 @@ bool CBatchProcessor::ProcessSlices(
         }
 
         ++result.processedSlices;
+
+        if (!ReportBatchProgress(options, _T("切片处理"), options.caseName, static_cast<int>(i + 1), result.totalSlices, errorMessage))
+        {
+            return false;
+        }
     }
 
     const std::wstring csvPath = JoinPath(JoinPath(options.outputRoot, L"csv"), L"batch_summary.csv");

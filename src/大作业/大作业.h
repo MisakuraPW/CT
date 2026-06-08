@@ -37,6 +37,7 @@ public:
 	afx_msg void OnFileOpen();
 	afx_msg void OnDatasetScanTasks();
 	afx_msg void OnDatasetProcessConfigured();
+	afx_msg void OnProcessingOptions();
 	DECLARE_MESSAGE_MAP()
 };
 

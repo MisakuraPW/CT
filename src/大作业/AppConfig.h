@@ -16,6 +16,7 @@ class CAppConfigLoader
 {
 public:
 	static bool LoadDefault(AppConfig& config, CString& errorMessage);
+	static bool SaveDefaultProcessingOptions(const AppConfig& config, CString& errorMessage);
 
 private:
 	static CString ResolveConfigPath();

@@ -73,6 +73,54 @@ bool CAppConfigLoader::LoadDefault(AppConfig& config, CString& errorMessage)
 	return true;
 }
 
+bool CAppConfigLoader::SaveDefaultProcessingOptions(const AppConfig& config, CString& errorMessage)
+{
+	const CString iniPath = ResolveConfigPath();
+	if (iniPath.IsEmpty())
+	{
+		errorMessage = _T("未找到 configs\\paths.local.ini，无法保存处理参数。");
+		return false;
+	}
+
+	auto writeString = [&](const CString& section, const CString& key, const CString& value) {
+		return ::WritePrivateProfileString(section, key, value, iniPath) != FALSE;
+	};
+	auto writeInt = [&](const CString& section, const CString& key, int value) {
+		CString text;
+		text.Format(_T("%d"), value);
+		return writeString(section, key, text);
+	};
+	auto writeDouble = [&](const CString& section, const CString& key, double value) {
+		CString text;
+		text.Format(_T("%.6g"), value);
+		return writeString(section, key, text);
+	};
+
+	bool ok = true;
+	ok = writeDouble(_T("preprocess"), _T("lung_window_level"), config.preprocessing.lungWindowLevel) && ok;
+	ok = writeDouble(_T("preprocess"), _T("lung_window_width"), config.preprocessing.lungWindowWidth) && ok;
+	ok = writeInt(_T("preprocess"), _T("gaussian_kernel_size"), config.preprocessing.gaussianKernelSize) && ok;
+	ok = writeInt(_T("preprocess"), _T("median_kernel_size"), config.preprocessing.medianKernelSize) && ok;
+	ok = writeDouble(_T("preprocess"), _T("clahe_clip_limit"), config.preprocessing.claheClipLimit) && ok;
+	ok = writeInt(_T("preprocess"), _T("clahe_tile_grid_size"), config.preprocessing.claheTileGridSize) && ok;
+	ok = writeInt(_T("segmentation"), _T("threshold_gaussian_kernel_size"), config.segmentation.thresholdGaussianKernelSize) && ok;
+	ok = writeInt(_T("segmentation"), _T("min_component_area"), config.segmentation.minComponentArea) && ok;
+	ok = writeInt(_T("segmentation"), _T("min_component_area_divisor"), config.segmentation.minComponentAreaDivisor) && ok;
+	ok = writeInt(_T("segmentation"), _T("keep_component_count"), config.segmentation.keepComponentCount) && ok;
+	ok = writeInt(_T("segmentation"), _T("open_kernel_size"), config.segmentation.openKernelSize) && ok;
+	ok = writeInt(_T("segmentation"), _T("close_kernel_size"), config.segmentation.closeKernelSize) && ok;
+	ok = writeInt(_T("segmentation"), _T("morphology_iterations"), config.segmentation.morphologyIterations) && ok;
+
+	if (!ok)
+	{
+		errorMessage = _T("处理参数写入 paths.local.ini 失败。");
+		return false;
+	}
+
+	errorMessage.Empty();
+	return true;
+}
+
 CString CAppConfigLoader::ResolveConfigPath()
 {
 	const CString direct = _T("configs\\paths.local.ini");

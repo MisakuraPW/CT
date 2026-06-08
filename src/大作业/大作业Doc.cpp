@@ -13,6 +13,7 @@
 #include "大作业Doc.h"
 
 #include "AppConfig.h"
+#include "BatchProgressDialog.h"
 #include "BatchProcessor.h"
 #include "CsvExporter.h"
 #include "ImageIO.h"
@@ -1224,15 +1225,28 @@ void C大作业Doc::OnBatchProcessCurrentVolume()
 	options.saveIntermediate = config.saveIntermediate;
 	options.segmentationOptions = config.segmentation;
 
-	CWaitCursor wait;
+	CBatchProgressDialog progressDialog(AfxGetMainWnd());
+	if (!progressDialog.Create(IDD_BATCH_PROGRESS, AfxGetMainWnd()))
+	{
+		AfxMessageBox(_T("无法创建批处理进度窗口。"));
+		return;
+	}
+	progressDialog.ShowWindow(SW_SHOW);
+	progressDialog.UpdateWindow();
+	options.progressCallback = [&progressDialog](const BatchProgressInfo& info) {
+		return progressDialog.UpdateProgress(info);
+	};
+
 	CBatchProcessor processor;
 	BatchProcessResult result;
 	CString error;
 	if (!processor.ProcessSlices(sourceSlices, gtMaskSlices, infectionMaskSlices, options, result, error))
 	{
+		progressDialog.DestroyWindow();
 		AfxMessageBox(error);
 		return;
 	}
+	progressDialog.DestroyWindow();
 
 	CString message;
 	message.Format(_T("批量处理完成。\r\n总切片数: %d\r\n成功处理: %d\r\n计算指标切片: %d\r\n感染统计切片: %d\r\n\r\n汇总 CSV:\r\n%s\r\n\r\n运行参数:\r\n%s"),

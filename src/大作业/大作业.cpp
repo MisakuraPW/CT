@@ -13,8 +13,10 @@
 #include "大作业Doc.h"
 #include "大作业View.h"
 #include "AppConfig.h"
+#include "BatchProgressDialog.h"
 #include "DatasetBatchRunner.h"
 #include "DatasetScanner.h"
+#include "ProcessingOptionsDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -30,6 +32,7 @@ BEGIN_MESSAGE_MAP(C大作业App, CWinAppEx)
 	ON_COMMAND(ID_FILE_OPEN, &C大作业App::OnFileOpen)
 	ON_COMMAND(ID_DATASET_SCAN_TASKS, &C大作业App::OnDatasetScanTasks)
 	ON_COMMAND(ID_DATASET_PROCESS_CONFIGURED, &C大作业App::OnDatasetProcessConfigured)
+	ON_COMMAND(ID_APP_PROCESSING_OPTIONS, &C大作业App::OnProcessingOptions)
 	// 标准打印设置命令
 	ON_COMMAND(ID_FILE_PRINT_SETUP, &CWinAppEx::OnFilePrintSetup)
 END_MESSAGE_MAP()
@@ -282,7 +285,7 @@ void C大作业App::OnDatasetProcessConfigured()
 
 	CString confirm;
 	confirm.Format(
-		_T("即将处理配置中的全部数据集任务。\n\nFinding Lungs 2D: %d\nFinding Lungs 3D: %d\nCOVID-19 CT: %d\n\n处理过程可能需要较长时间，期间窗口会暂时无响应。是否继续？"),
+		_T("即将处理配置中的全部数据集任务。\n\nFinding Lungs 2D: %d\nFinding Lungs 3D: %d\nCOVID-19 CT: %d\n\n处理过程可能需要较长时间，可在进度窗口中取消。是否继续？"),
 		scanResult.finding2DCount,
 		scanResult.finding3DCount,
 		scanResult.covidCount);
@@ -308,16 +311,27 @@ void C大作业App::OnDatasetProcessConfigured()
 	options.saveIntermediate = config.saveIntermediate;
 	options.segmentationOptions = config.segmentation;
 
+	CBatchProgressDialog progressDialog(m_pMainWnd);
+	if (!progressDialog.Create(IDD_BATCH_PROGRESS, m_pMainWnd))
+	{
+		AfxMessageBox(_T("无法创建批处理进度窗口。"), MB_ICONERROR);
+		return;
+	}
+	progressDialog.ShowWindow(SW_SHOW);
+	progressDialog.UpdateWindow();
+	options.progressCallback = [&progressDialog](const BatchProgressInfo& info) {
+		return progressDialog.UpdateProgress(info);
+	};
+
 	DatasetBatchSummary summary;
 	CDatasetBatchRunner runner;
+	if (!runner.Run(scanResult, options, summary, errorMessage))
 	{
-		CWaitCursor wait;
-		if (!runner.Run(scanResult, options, summary, errorMessage))
-		{
-			AfxMessageBox(errorMessage, MB_ICONERROR);
-			return;
-		}
+		progressDialog.DestroyWindow();
+		AfxMessageBox(errorMessage, MB_ICONERROR);
+		return;
 	}
+	progressDialog.DestroyWindow();
 
 	CString message;
 	message.Format(
@@ -328,6 +342,31 @@ void C大作业App::OnDatasetProcessConfigured()
 		summary.totalSlices,
 		summary.summaryCsvPath.GetString());
 	AfxMessageBox(message, summary.failedCases > 0 ? MB_ICONWARNING : MB_ICONINFORMATION);
+}
+
+void C大作业App::OnProcessingOptions()
+{
+	AppConfig config;
+	CString errorMessage;
+	if (!CAppConfigLoader::LoadDefault(config, errorMessage))
+	{
+		AfxMessageBox(errorMessage, MB_ICONWARNING);
+		return;
+	}
+
+	CProcessingOptionsDialog dialog(config, m_pMainWnd);
+	if (dialog.DoModal() != IDOK)
+	{
+		return;
+	}
+
+	if (!CAppConfigLoader::SaveDefaultProcessingOptions(config, errorMessage))
+	{
+		AfxMessageBox(errorMessage, MB_ICONERROR);
+		return;
+	}
+
+	AfxMessageBox(_T("处理参数已保存到 configs\\paths.local.ini。后续预处理、分割和批处理会使用新参数。"), MB_ICONINFORMATION);
 }
 
 // C大作业App 自定义加载/保存方法
