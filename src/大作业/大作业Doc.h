@@ -135,6 +135,7 @@ protected:
 	afx_msg void OnSegmentInfection();
 	afx_msg void OnCalculateMetrics();
 	afx_msg void OnAnalyzeInfectionBurden();
+	afx_msg void OnAnalyzeInfectionBurdenSeg();
 	afx_msg void OnCalculateInfectionMetrics();
 	afx_msg void OnSaveCurrentResult();
 	afx_msg void OnExportMetricsCsv();

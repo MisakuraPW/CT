@@ -92,6 +92,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_PROCESS_SEGMENT_INFECTION, &C大作业Doc::OnSegmentInfection)
 	ON_COMMAND(ID_ANALYSIS_CALCULATE_METRICS, &C大作业Doc::OnCalculateMetrics)
 	ON_COMMAND(ID_ANALYSIS_INFECTION_BURDEN, &C大作业Doc::OnAnalyzeInfectionBurden)
+	ON_COMMAND(ID_ANALYSIS_INFECTION_BURDEN_SEG, &C大作业Doc::OnAnalyzeInfectionBurdenSeg)
 	ON_COMMAND(ID_ANALYSIS_CALCULATE_INFECTION_METRICS, &C大作业Doc::OnCalculateInfectionMetrics)
 	ON_COMMAND(ID_RESULT_SAVE_CURRENT, &C大作业Doc::OnSaveCurrentResult)
 	ON_COMMAND(ID_RESULT_EXPORT_METRICS_CSV, &C大作业Doc::OnExportMetricsCsv)
@@ -126,6 +127,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_PROCESS_SEGMENT_INFECTION, &C大作业Doc::OnUpdateHasFinalMask)
 	ON_UPDATE_COMMAND_UI(ID_ANALYSIS_CALCULATE_METRICS, &C大作业Doc::OnUpdateHasFinalAndMask)
 	ON_UPDATE_COMMAND_UI(ID_ANALYSIS_INFECTION_BURDEN, &C大作业Doc::OnUpdateHasFinalAndInfection)
+	ON_UPDATE_COMMAND_UI(ID_ANALYSIS_INFECTION_BURDEN_SEG, &C大作业Doc::OnUpdateHasInfectionSegmentationMask)
 	ON_UPDATE_COMMAND_UI(ID_ANALYSIS_CALCULATE_INFECTION_METRICS, &C大作业Doc::OnUpdateHasInfectionMetrics)
 	ON_UPDATE_COMMAND_UI(ID_RESULT_SAVE_CURRENT, &C大作业Doc::OnUpdateHasOriginal)
 	ON_UPDATE_COMMAND_UI(ID_RESULT_EXPORT_METRICS_CSV, &C大作业Doc::OnUpdateHasMetrics)
@@ -836,6 +838,35 @@ void C大作业Doc::OnAnalyzeInfectionBurden()
 	CInfectionAnalyzer analyzer;
 	m_lastInfectionStats = analyzer.Analyze(m_segmentationResult.finalMask, m_infectionMask);
 	m_infectionOverlay = analyzer.MakeInfectionOverlay(m_originalImage, m_segmentationResult.finalMask, m_infectionMask);
+	m_hasInfectionStats = TRUE;
+
+	CString message;
+	message.Format(_T("整体感染负荷: %.4f\r\n肺部面积: %lld\r\n感染面积: %lld\r\n\r\n图像左侧肺感染比例: %.4f\r\n左侧肺面积: %lld\r\n左侧感染面积: %lld\r\n\r\n图像右侧肺感染比例: %.4f\r\n右侧肺面积: %lld\r\n右侧感染面积: %lld"),
+		m_lastInfectionStats.infectionRatio,
+		m_lastInfectionStats.lungArea,
+		m_lastInfectionStats.infectionArea,
+		m_lastInfectionStats.leftRatio,
+		m_lastInfectionStats.leftLungArea,
+		m_lastInfectionStats.leftInfectionArea,
+		m_lastInfectionStats.rightRatio,
+		m_lastInfectionStats.rightLungArea,
+		m_lastInfectionStats.rightInfectionArea);
+
+	SetDisplayKind(DisplayImageKind::InfectionOverlay);
+	AfxMessageBox(message);
+}
+
+void C大作业Doc::OnAnalyzeInfectionBurdenSeg()
+{
+	if (m_segmentationResult.finalMask.empty() || m_infectionSegmentationMask.empty())
+	{
+		AfxMessageBox(_T("请先执行感染区域分割。"));
+		return;
+	}
+
+	CInfectionAnalyzer analyzer;
+	m_lastInfectionStats = analyzer.Analyze(m_segmentationResult.finalMask, m_infectionSegmentationMask);
+	m_infectionOverlay = analyzer.MakeInfectionOverlay(m_originalImage, m_segmentationResult.finalMask, m_infectionSegmentationMask);
 	m_hasInfectionStats = TRUE;
 
 	CString message;
