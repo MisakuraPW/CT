@@ -160,6 +160,7 @@ protected:
 	afx_msg void OnShowMaskComparisonOverlay();
 	afx_msg void OnShowInfectionMask();
 	afx_msg void OnShowInfectionOverlay();
+	afx_msg void OnShowInfectionOverlaySeg();
 	afx_msg void OnShowInfectionSegmentationMask();
 	afx_msg void OnPreviousSlice();
 	afx_msg void OnNextSlice();

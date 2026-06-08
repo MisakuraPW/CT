@@ -117,6 +117,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_VIEW_SHOW_MASK_COMPARISON, &C大作业Doc::OnShowMaskComparisonOverlay)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_MASK, &C大作业Doc::OnShowInfectionMask)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnShowInfectionOverlay)
+	ON_COMMAND(ID_VIEW_SHOW_INFECTION_OVERLAY_SEG, &C大作业Doc::OnShowInfectionOverlaySeg)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_SEGMENTATION_MASK, &C大作业Doc::OnShowInfectionSegmentationMask)
 	ON_COMMAND(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnPreviousSlice)
 	ON_COMMAND(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnNextSlice)
@@ -153,6 +154,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_MASK, &C大作业Doc::OnUpdateHasInfectionMask)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_SEGMENTATION_MASK, &C大作业Doc::OnUpdateHasInfectionSegmentationMask)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnUpdateHasInfectionStats)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_OVERLAY_SEG, &C大作业Doc::OnUpdateHasInfectionSegmentationMask)
 	ON_UPDATE_COMMAND_UI(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnUpdateCanPreviousSlice)
 	ON_UPDATE_COMMAND_UI(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnUpdateCanNextSlice)
 	ON_UPDATE_COMMAND_UI(ID_BATCH_PROCESS_CURRENT_VOLUME, &C大作业Doc::OnUpdateCanBatchProcessCurrentData)
@@ -1123,6 +1125,19 @@ void C大作业Doc::OnShowInfectionMask()
 
 void C大作业Doc::OnShowInfectionOverlay()
 {
+	SetDisplayKind(DisplayImageKind::InfectionOverlay);
+}
+
+void C大作业Doc::OnShowInfectionOverlaySeg()
+{
+	if (m_segmentationResult.finalMask.empty() || m_infectionSegmentationMask.empty())
+	{
+		AfxMessageBox(_T("请先执行感染区域分割。"));
+		return;
+	}
+
+	CInfectionAnalyzer analyzer;
+	m_infectionOverlay = analyzer.MakeInfectionOverlay(m_originalImage, m_segmentationResult.finalMask, m_infectionSegmentationMask);
 	SetDisplayKind(DisplayImageKind::InfectionOverlay);
 }
 
