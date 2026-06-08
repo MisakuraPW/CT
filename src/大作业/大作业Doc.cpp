@@ -451,6 +451,26 @@ BOOL C大作业Doc::HasVolume() const
 	return m_sourceVolume.depth > 1;
 }
 
+int C大作业Doc::GetVolumeDepth() const
+{
+	return m_sourceVolume.depth;
+}
+
+int C大作业Doc::GetCurrentSliceIndex() const
+{
+	return m_currentSliceIndex;
+}
+
+void C大作业Doc::SetSliceIndex(int index)
+{
+	if (index < 0 || index >= m_sourceVolume.depth || index == m_currentSliceIndex)
+		return;
+	
+	m_currentSliceIndex = index;
+	ApplyCurrentSlice();
+	UpdateAllViews(nullptr);
+}
+
 BOOL C大作业Doc::CanMoveToPreviousSlice() const
 {
 	return HasVolume() && m_currentSliceIndex > 0;

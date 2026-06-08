@@ -61,6 +61,9 @@ public:
 	BOOL HasInfectionStats() const;
 	BOOL HasInfectionMetrics() const;
 	BOOL HasVolume() const;
+	int GetVolumeDepth() const;
+	int GetCurrentSliceIndex() const;
+	void SetSliceIndex(int index);
 	BOOL CanMoveToPreviousSlice() const;
 	BOOL CanMoveToNextSlice() const;
 	BOOL CanBatchProcessCurrentData() const;
