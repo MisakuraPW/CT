@@ -12,6 +12,8 @@
 
 #include <opencv2/core.hpp>
 
+#include <vector>
+
 enum class DisplayImageKind
 {
 	Original,
@@ -30,6 +32,27 @@ enum class DisplayImageKind
 	InfectionMask,
 	InfectionOverlay,
 	InfectionSegmentationMask
+};
+
+struct SliceState
+{
+	cv::Mat grayImage;
+	cv::Mat lungWindowImage;
+	cv::Mat gaussianImage;
+	cv::Mat medianImage;
+	cv::Mat claheImage;
+	cv::Mat infectionSegmentationMask;
+	cv::Mat connectedColorMap;
+	cv::Mat maskComparisonOverlay;
+	cv::Mat infectionOverlay;
+	LungSegmentationResult segmentationResult;
+	SegmentationMetrics metrics;
+	InfectionStats infectionStats;
+	SegmentationMetrics infectionMetrics;
+	BOOL hasMetrics = FALSE;
+	BOOL hasInfectionStats = FALSE;
+	BOOL hasInfectionMetrics = FALSE;
+	DisplayImageKind displayKind = DisplayImageKind::Original;
 };
 
 class C大作业Doc : public CDocument
@@ -89,32 +112,21 @@ public:
 
 protected:
 	cv::Mat m_originalImage;
-	cv::Mat m_grayImage;
-	cv::Mat m_lungWindowImage;
-	cv::Mat m_gaussianImage;
-	cv::Mat m_medianImage;
-	cv::Mat m_claheImage;
 	cv::Mat m_manualMask;
 	cv::Mat m_infectionMask;
-	cv::Mat m_infectionSegmentationMask;
-	cv::Mat m_connectedColorMap;
-	cv::Mat m_maskComparisonOverlay;
-	cv::Mat m_infectionOverlay;
 	NiftiVolume m_sourceVolume;
 	NiftiVolume m_manualMaskVolume;
 	NiftiVolume m_infectionMaskVolume;
-	LungSegmentationResult m_segmentationResult;
+	std::vector<SliceState> m_sliceStates;
+	mutable SliceState m_defaultSliceState;
 	DisplayImageKind m_displayKind = DisplayImageKind::Original;
 	int m_currentSliceIndex = 0;
 	CString m_sourcePath;
 	CString m_manualMaskPath;
 	CString m_infectionMaskPath;
-	SegmentationMetrics m_lastMetrics;
-	InfectionStats m_lastInfectionStats;
-	SegmentationMetrics m_lastInfectionMetrics;
-	BOOL m_hasMetrics = FALSE;
-	BOOL m_hasInfectionStats = FALSE;
-	BOOL m_hasInfectionMetrics = FALSE;
+
+	SliceState& CurrentSliceState();
+	const SliceState& CurrentSliceState() const;
 
 	BOOL LoadSourceImage(const CString& pathName);
 	BOOL LoadManualMask(const CString& pathName);

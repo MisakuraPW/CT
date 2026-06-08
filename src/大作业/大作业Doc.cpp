@@ -290,39 +290,39 @@ const cv::Mat& C大作业Doc::GetDisplayImage() const
 	switch (m_displayKind)
 	{
 	case DisplayImageKind::Gray:
-		if (!m_grayImage.empty())
+		if (!CurrentSliceState().grayImage.empty())
 		{
-			return m_grayImage;
+			return CurrentSliceState().grayImage;
 		}
-		return m_segmentationResult.gray.empty() ? m_originalImage : m_segmentationResult.gray;
+		return CurrentSliceState().segmentationResult.gray.empty() ? m_originalImage : CurrentSliceState().segmentationResult.gray;
 	case DisplayImageKind::LungWindow:
-		return m_lungWindowImage.empty() ? m_originalImage : m_lungWindowImage;
+		return CurrentSliceState().lungWindowImage.empty() ? m_originalImage : CurrentSliceState().lungWindowImage;
 	case DisplayImageKind::GaussianBlur:
-		return m_gaussianImage.empty() ? m_originalImage : m_gaussianImage;
+		return CurrentSliceState().gaussianImage.empty() ? m_originalImage : CurrentSliceState().gaussianImage;
 	case DisplayImageKind::MedianBlur:
-		return m_medianImage.empty() ? m_originalImage : m_medianImage;
+		return CurrentSliceState().medianImage.empty() ? m_originalImage : CurrentSliceState().medianImage;
 	case DisplayImageKind::Clahe:
-		return m_claheImage.empty() ? m_originalImage : m_claheImage;
+		return CurrentSliceState().claheImage.empty() ? m_originalImage : CurrentSliceState().claheImage;
 	case DisplayImageKind::Threshold:
-		return m_segmentationResult.thresholdMask.empty() ? m_originalImage : m_segmentationResult.thresholdMask;
+		return CurrentSliceState().segmentationResult.thresholdMask.empty() ? m_originalImage : CurrentSliceState().segmentationResult.thresholdMask;
 	case DisplayImageKind::Connected:
-		return m_segmentationResult.connectedMask.empty() ? m_originalImage : m_segmentationResult.connectedMask;
+		return CurrentSliceState().segmentationResult.connectedMask.empty() ? m_originalImage : CurrentSliceState().segmentationResult.connectedMask;
 	case DisplayImageKind::Morphology:
-		return m_segmentationResult.morphologyMask.empty() ? m_originalImage : m_segmentationResult.morphologyMask;
+		return CurrentSliceState().segmentationResult.morphologyMask.empty() ? m_originalImage : CurrentSliceState().segmentationResult.morphologyMask;
 	case DisplayImageKind::FinalMask:
-		return m_segmentationResult.finalMask.empty() ? m_originalImage : m_segmentationResult.finalMask;
+		return CurrentSliceState().segmentationResult.finalMask.empty() ? m_originalImage : CurrentSliceState().segmentationResult.finalMask;
 	case DisplayImageKind::ManualMask:
 		return m_manualMask.empty() ? m_originalImage : m_manualMask;
 	case DisplayImageKind::ConnectedColorMap:
-		return m_connectedColorMap.empty() ? m_originalImage : m_connectedColorMap;
+		return CurrentSliceState().connectedColorMap.empty() ? m_originalImage : CurrentSliceState().connectedColorMap;
 	case DisplayImageKind::MaskComparisonOverlay:
-		return m_maskComparisonOverlay.empty() ? m_originalImage : m_maskComparisonOverlay;
+		return CurrentSliceState().maskComparisonOverlay.empty() ? m_originalImage : CurrentSliceState().maskComparisonOverlay;
 	case DisplayImageKind::InfectionMask:
 		return m_infectionMask.empty() ? m_originalImage : m_infectionMask;
 	case DisplayImageKind::InfectionOverlay:
-		return m_infectionOverlay.empty() ? m_originalImage : m_infectionOverlay;
+		return CurrentSliceState().infectionOverlay.empty() ? m_originalImage : CurrentSliceState().infectionOverlay;
 	case DisplayImageKind::InfectionSegmentationMask:
-		return m_infectionSegmentationMask.empty() ? m_originalImage : m_infectionSegmentationMask;
+		return CurrentSliceState().infectionSegmentationMask.empty() ? m_originalImage : CurrentSliceState().infectionSegmentationMask;
 	case DisplayImageKind::Original:
 	default:
 		return m_originalImage;
@@ -382,32 +382,32 @@ BOOL C大作业Doc::HasOriginalImage() const
 
 BOOL C大作业Doc::HasPreprocessedGray() const
 {
-	return !m_grayImage.empty() || !m_segmentationResult.gray.empty();
+	return !CurrentSliceState().grayImage.empty() || !CurrentSliceState().segmentationResult.gray.empty();
 }
 
 BOOL C大作业Doc::HasLungWindowImage() const
 {
-	return !m_lungWindowImage.empty();
+	return !CurrentSliceState().lungWindowImage.empty();
 }
 
 BOOL C大作业Doc::HasGaussianImage() const
 {
-	return !m_gaussianImage.empty();
+	return !CurrentSliceState().gaussianImage.empty();
 }
 
 BOOL C大作业Doc::HasMedianImage() const
 {
-	return !m_medianImage.empty();
+	return !CurrentSliceState().medianImage.empty();
 }
 
 BOOL C大作业Doc::HasClaheImage() const
 {
-	return !m_claheImage.empty();
+	return !CurrentSliceState().claheImage.empty();
 }
 
 BOOL C大作业Doc::HasFinalMask() const
 {
-	return !m_segmentationResult.finalMask.empty();
+	return !CurrentSliceState().segmentationResult.finalMask.empty();
 }
 
 BOOL C大作业Doc::HasManualMask() const
@@ -422,32 +422,32 @@ BOOL C大作业Doc::HasInfectionMask() const
 
 BOOL C大作业Doc::HasInfectionSegmentationMask() const
 {
-	return !m_infectionSegmentationMask.empty();
+	return !CurrentSliceState().infectionSegmentationMask.empty();
 }
 
 BOOL C大作业Doc::HasConnectedColorMap() const
 {
-	return !m_connectedColorMap.empty();
+	return !CurrentSliceState().connectedColorMap.empty();
 }
 
 BOOL C大作业Doc::HasMaskComparisonOverlay() const
 {
-	return !m_maskComparisonOverlay.empty();
+	return !CurrentSliceState().maskComparisonOverlay.empty();
 }
 
 BOOL C大作业Doc::HasMetrics() const
 {
-	return m_hasMetrics;
+	return CurrentSliceState().hasMetrics;
 }
 
 BOOL C大作业Doc::HasInfectionStats() const
 {
-	return m_hasInfectionStats;
+	return CurrentSliceState().hasInfectionStats;
 }
 
 BOOL C大作业Doc::HasInfectionMetrics() const
 {
-	return m_hasInfectionMetrics;
+	return CurrentSliceState().hasInfectionMetrics;
 }
 
 BOOL C大作业Doc::HasVolume() const
@@ -463,6 +463,24 @@ int C大作业Doc::GetVolumeDepth() const
 int C大作业Doc::GetCurrentSliceIndex() const
 {
 	return m_currentSliceIndex;
+}
+
+SliceState& C大作业Doc::CurrentSliceState()
+{
+	if (m_currentSliceIndex >= static_cast<int>(m_sliceStates.size()))
+	{
+		m_sliceStates.resize(m_currentSliceIndex + 1);
+	}
+	return m_sliceStates[m_currentSliceIndex];
+}
+
+const SliceState& C大作业Doc::CurrentSliceState() const
+{
+	if (m_currentSliceIndex >= static_cast<int>(m_sliceStates.size()))
+	{
+		return m_defaultSliceState;
+	}
+	return m_sliceStates[m_currentSliceIndex];
 }
 
 void C大作业Doc::SetSliceIndex(int index)
@@ -523,6 +541,7 @@ BOOL C大作业Doc::LoadSourceImage(const CString& pathName)
 
 	m_sourcePath = pathName;
 	m_displayKind = DisplayImageKind::Original;
+	m_sliceStates.resize(std::max(m_sourceVolume.depth, 1));
 	SetTitle(pathName.Mid(pathName.ReverseFind(_T('\\')) + 1));
 	UpdateAllViews(nullptr);
 	return TRUE;
@@ -553,8 +572,8 @@ BOOL C大作业Doc::LoadManualMask(const CString& pathName)
 
 	m_manualMask = NormalizeBinaryMaskForDoc(m_manualMask);
 	m_manualMaskPath = pathName;
-	m_hasMetrics = FALSE;
-	m_maskComparisonOverlay.release();
+	CurrentSliceState().hasMetrics = FALSE;
+	CurrentSliceState().maskComparisonOverlay.release();
 	SetDisplayKind(DisplayImageKind::ManualMask);
 	return TRUE;
 }
@@ -584,8 +603,8 @@ BOOL C大作业Doc::LoadInfectionMask(const CString& pathName)
 
 	m_infectionMask = NormalizeBinaryMaskForDoc(m_infectionMask);
 	m_infectionMaskPath = pathName;
-	m_hasInfectionStats = FALSE;
-	m_infectionOverlay.release();
+	CurrentSliceState().hasInfectionStats = FALSE;
+	CurrentSliceState().infectionOverlay.release();
 	SetDisplayKind(DisplayImageKind::InfectionMask);
 	return TRUE;
 }
@@ -624,60 +643,42 @@ void C大作业Doc::ApplyCurrentSlice()
 			m_infectionMask = NormalizeBinaryMaskForDoc(m_infectionMask);
 		}
 	}
-
-	ClearSliceDerivedResults();
-	SetDisplayKind(DisplayImageKind::Original);
 }
 
 void C大作业Doc::ClearSliceDerivedResults()
 {
-	m_grayImage.release();
-	m_lungWindowImage.release();
-	m_gaussianImage.release();
-	m_medianImage.release();
-	m_claheImage.release();
-	m_segmentationResult = LungSegmentationResult{};
-	m_connectedColorMap.release();
-	m_maskComparisonOverlay.release();
-	m_infectionOverlay.release();
-	m_infectionSegmentationMask.release();
-	m_lastMetrics = SegmentationMetrics{};
-	m_lastInfectionStats = InfectionStats{};
-	m_lastInfectionMetrics = SegmentationMetrics{};
-	m_hasMetrics = FALSE;
-	m_hasInfectionStats = FALSE;
-	m_hasInfectionMetrics = FALSE;
+	CurrentSliceState().grayImage.release();
+	CurrentSliceState().lungWindowImage.release();
+	CurrentSliceState().gaussianImage.release();
+	CurrentSliceState().medianImage.release();
+	CurrentSliceState().claheImage.release();
+	CurrentSliceState().segmentationResult = LungSegmentationResult{};
+	CurrentSliceState().connectedColorMap.release();
+	CurrentSliceState().maskComparisonOverlay.release();
+	CurrentSliceState().infectionOverlay.release();
+	CurrentSliceState().infectionSegmentationMask.release();
+	CurrentSliceState().metrics = SegmentationMetrics{};
+	CurrentSliceState().infectionStats = InfectionStats{};
+	CurrentSliceState().infectionMetrics = SegmentationMetrics{};
+	CurrentSliceState().hasMetrics = FALSE;
+	CurrentSliceState().hasInfectionStats = FALSE;
+	CurrentSliceState().hasInfectionMetrics = FALSE;
 }
 
 void C大作业Doc::ClearImages()
 {
 	m_originalImage.release();
-	m_grayImage.release();
-	m_lungWindowImage.release();
-	m_gaussianImage.release();
-	m_medianImage.release();
-	m_claheImage.release();
 	m_manualMask.release();
 	m_infectionMask.release();
-	m_connectedColorMap.release();
-	m_maskComparisonOverlay.release();
-	m_infectionOverlay.release();
-	m_infectionSegmentationMask.release();
+	m_sliceStates.clear();
 	m_sourceVolume = NiftiVolume{};
 	m_manualMaskVolume = NiftiVolume{};
 	m_infectionMaskVolume = NiftiVolume{};
-	m_segmentationResult = LungSegmentationResult{};
 	m_displayKind = DisplayImageKind::Original;
 	m_currentSliceIndex = 0;
 	m_sourcePath.Empty();
 	m_manualMaskPath.Empty();
 	m_infectionMaskPath.Empty();
-	m_lastMetrics = SegmentationMetrics{};
-	m_lastInfectionStats = InfectionStats{};
-	m_lastInfectionMetrics = SegmentationMetrics{};
-	m_hasMetrics = FALSE;
-	m_hasInfectionStats = FALSE;
-	m_hasInfectionMetrics = FALSE;
 }
 
 void C大作业Doc::SetDisplayKind(DisplayImageKind kind)
@@ -756,27 +757,27 @@ void C大作业Doc::OnRunLungSegmentation()
 	CWaitCursor wait;
 	const AppConfig config = LoadConfigOrDefaults();
 	CLungSegmenter segmenter;
-	m_segmentationResult = segmenter.Segment(m_originalImage, config.segmentation);
-	if (m_segmentationResult.finalMask.empty())
+	CurrentSliceState().segmentationResult = segmenter.Segment(m_originalImage, config.segmentation);
+	if (CurrentSliceState().segmentationResult.finalMask.empty())
 	{
 		AfxMessageBox(_T("肺部分割失败。"));
 		return;
 	}
 
 	COverlayVisualizer visualizer;
-	m_grayImage = m_segmentationResult.gray.clone();
-	m_connectedColorMap = visualizer.MakeConnectedComponentColorMap(m_segmentationResult.thresholdMask);
-	m_maskComparisonOverlay.release();
-	m_hasMetrics = FALSE;
-	m_hasInfectionStats = FALSE;
-	m_infectionOverlay.release();
+	CurrentSliceState().grayImage = CurrentSliceState().segmentationResult.gray.clone();
+	CurrentSliceState().connectedColorMap = visualizer.MakeConnectedComponentColorMap(CurrentSliceState().segmentationResult.thresholdMask);
+	CurrentSliceState().maskComparisonOverlay.release();
+	CurrentSliceState().hasMetrics = FALSE;
+	CurrentSliceState().hasInfectionStats = FALSE;
+	CurrentSliceState().infectionOverlay.release();
 	SetDisplayKind(DisplayImageKind::FinalMask);
 	AfxMessageBox(_T("肺部分割完成。可在“视图”菜单切换查看中间结果。"));
 }
 
 void C大作业Doc::OnSegmentInfection()
 {
-	if (m_segmentationResult.finalMask.empty())
+	if (CurrentSliceState().segmentationResult.finalMask.empty())
 	{
 		AfxMessageBox(_T("请先执行“一键肺部分割”。"));
 		return;
@@ -785,7 +786,7 @@ void C大作业Doc::OnSegmentInfection()
 	CWaitCursor wait;
 	CInfectionSegmenter segmenter;
 	InfectionSegmentationResult result = segmenter.Segment(
-		m_originalImage, m_segmentationResult.finalMask);
+		m_originalImage, CurrentSliceState().segmentationResult.finalMask);
 
 	if (result.infectionMask.empty())
 	{
@@ -793,66 +794,66 @@ void C大作业Doc::OnSegmentInfection()
 		return;
 	}
 
-	m_infectionSegmentationMask = result.infectionMask.clone();
-	m_hasInfectionStats = FALSE;
-	m_hasInfectionMetrics = FALSE;
-	m_infectionOverlay.release();
+	CurrentSliceState().infectionSegmentationMask = result.infectionMask.clone();
+	CurrentSliceState().hasInfectionStats = FALSE;
+	CurrentSliceState().hasInfectionMetrics = FALSE;
+	CurrentSliceState().infectionOverlay.release();
 	SetDisplayKind(DisplayImageKind::InfectionSegmentationMask);
 	AfxMessageBox(_T("感染区域分割完成。可在“视图”菜单查看感染 mask 和叠加图，\n也可在“分析”菜单执行感染负荷分析。"));
 }
 
 void C大作业Doc::OnCalculateMetrics()
 {
-	if (m_segmentationResult.finalMask.empty() || m_manualMask.empty())
+	if (CurrentSliceState().segmentationResult.finalMask.empty() || m_manualMask.empty())
 	{
 		AfxMessageBox(_T("请先完成肺部分割，并打开人工 mask。"));
 		return;
 	}
 
 	CMetricsCalculator calculator;
-	m_lastMetrics = calculator.Calculate(m_segmentationResult.finalMask, m_manualMask);
+	CurrentSliceState().metrics = calculator.Calculate(CurrentSliceState().segmentationResult.finalMask, m_manualMask);
 	COverlayVisualizer visualizer;
-	m_maskComparisonOverlay = visualizer.MakeComparisonOverlay(m_originalImage, m_segmentationResult.finalMask, m_manualMask);
-	m_hasMetrics = TRUE;
+	CurrentSliceState().maskComparisonOverlay = visualizer.MakeComparisonOverlay(m_originalImage, CurrentSliceState().segmentationResult.finalMask, m_manualMask);
+	CurrentSliceState().hasMetrics = TRUE;
 
 	CString message;
 	message.Format(_T("Dice: %.4f\r\nIoU: %.4f\r\nPrecision: %.4f\r\nRecall: %.4f\r\nArea Error: %.4f\r\n\r\nTP: %lld\r\nFP: %lld\r\nTN: %lld\r\nFN: %lld"),
-		m_lastMetrics.dice,
-		m_lastMetrics.iou,
-		m_lastMetrics.precision,
-		m_lastMetrics.recall,
-		m_lastMetrics.areaError,
-		m_lastMetrics.tp,
-		m_lastMetrics.fp,
-		m_lastMetrics.tn,
-		m_lastMetrics.fn);
+		CurrentSliceState().metrics.dice,
+		CurrentSliceState().metrics.iou,
+		CurrentSliceState().metrics.precision,
+		CurrentSliceState().metrics.recall,
+		CurrentSliceState().metrics.areaError,
+		CurrentSliceState().metrics.tp,
+		CurrentSliceState().metrics.fp,
+		CurrentSliceState().metrics.tn,
+		CurrentSliceState().metrics.fn);
 	AfxMessageBox(message);
 }
 
 void C大作业Doc::OnAnalyzeInfectionBurden()
 {
-	if (m_segmentationResult.finalMask.empty() || m_infectionMask.empty())
+	if (CurrentSliceState().segmentationResult.finalMask.empty() || m_infectionMask.empty())
 	{
 		AfxMessageBox(_T("请先完成肺部分割，并打开感染 mask。"));
 		return;
 	}
 
 	CInfectionAnalyzer analyzer;
-	m_lastInfectionStats = analyzer.Analyze(m_segmentationResult.finalMask, m_infectionMask);
-	m_infectionOverlay = analyzer.MakeInfectionOverlay(m_originalImage, m_segmentationResult.finalMask, m_infectionMask);
-	m_hasInfectionStats = TRUE;
+	CurrentSliceState().infectionStats = analyzer.Analyze(CurrentSliceState().segmentationResult.finalMask, m_infectionMask);
+	CurrentSliceState().infectionOverlay = analyzer.MakeInfectionOverlay(m_originalImage, CurrentSliceState().segmentationResult.finalMask, m_infectionMask);
+	CurrentSliceState().hasInfectionStats = TRUE;
 
 	CString message;
 	message.Format(_T("整体感染负荷: %.4f\r\n肺部面积: %lld\r\n感染面积: %lld\r\n\r\n图像左侧肺感染比例: %.4f\r\n左侧肺面积: %lld\r\n左侧感染面积: %lld\r\n\r\n图像右侧肺感染比例: %.4f\r\n右侧肺面积: %lld\r\n右侧感染面积: %lld"),
-		m_lastInfectionStats.infectionRatio,
-		m_lastInfectionStats.lungArea,
-		m_lastInfectionStats.infectionArea,
-		m_lastInfectionStats.leftRatio,
-		m_lastInfectionStats.leftLungArea,
-		m_lastInfectionStats.leftInfectionArea,
-		m_lastInfectionStats.rightRatio,
-		m_lastInfectionStats.rightLungArea,
-		m_lastInfectionStats.rightInfectionArea);
+		CurrentSliceState().infectionStats.infectionRatio,
+		CurrentSliceState().infectionStats.lungArea,
+		CurrentSliceState().infectionStats.infectionArea,
+		CurrentSliceState().infectionStats.leftRatio,
+		CurrentSliceState().infectionStats.leftLungArea,
+		CurrentSliceState().infectionStats.leftInfectionArea,
+		CurrentSliceState().infectionStats.rightRatio,
+		CurrentSliceState().infectionStats.rightLungArea,
+		CurrentSliceState().infectionStats.rightInfectionArea);
 
 	SetDisplayKind(DisplayImageKind::InfectionOverlay);
 	AfxMessageBox(message);
@@ -860,28 +861,28 @@ void C大作业Doc::OnAnalyzeInfectionBurden()
 
 void C大作业Doc::OnAnalyzeInfectionBurdenSeg()
 {
-	if (m_segmentationResult.finalMask.empty() || m_infectionSegmentationMask.empty())
+	if (CurrentSliceState().segmentationResult.finalMask.empty() || CurrentSliceState().infectionSegmentationMask.empty())
 	{
 		AfxMessageBox(_T("请先执行感染区域分割。"));
 		return;
 	}
 
 	CInfectionAnalyzer analyzer;
-	m_lastInfectionStats = analyzer.Analyze(m_segmentationResult.finalMask, m_infectionSegmentationMask);
-	m_infectionOverlay = analyzer.MakeInfectionOverlay(m_originalImage, m_segmentationResult.finalMask, m_infectionSegmentationMask);
-	m_hasInfectionStats = TRUE;
+	CurrentSliceState().infectionStats = analyzer.Analyze(CurrentSliceState().segmentationResult.finalMask, CurrentSliceState().infectionSegmentationMask);
+	CurrentSliceState().infectionOverlay = analyzer.MakeInfectionOverlay(m_originalImage, CurrentSliceState().segmentationResult.finalMask, CurrentSliceState().infectionSegmentationMask);
+	CurrentSliceState().hasInfectionStats = TRUE;
 
 	CString message;
 	message.Format(_T("整体感染负荷: %.4f\r\n肺部面积: %lld\r\n感染面积: %lld\r\n\r\n图像左侧肺感染比例: %.4f\r\n左侧肺面积: %lld\r\n左侧感染面积: %lld\r\n\r\n图像右侧肺感染比例: %.4f\r\n右侧肺面积: %lld\r\n右侧感染面积: %lld"),
-		m_lastInfectionStats.infectionRatio,
-		m_lastInfectionStats.lungArea,
-		m_lastInfectionStats.infectionArea,
-		m_lastInfectionStats.leftRatio,
-		m_lastInfectionStats.leftLungArea,
-		m_lastInfectionStats.leftInfectionArea,
-		m_lastInfectionStats.rightRatio,
-		m_lastInfectionStats.rightLungArea,
-		m_lastInfectionStats.rightInfectionArea);
+		CurrentSliceState().infectionStats.infectionRatio,
+		CurrentSliceState().infectionStats.lungArea,
+		CurrentSliceState().infectionStats.infectionArea,
+		CurrentSliceState().infectionStats.leftRatio,
+		CurrentSliceState().infectionStats.leftLungArea,
+		CurrentSliceState().infectionStats.leftInfectionArea,
+		CurrentSliceState().infectionStats.rightRatio,
+		CurrentSliceState().infectionStats.rightLungArea,
+		CurrentSliceState().infectionStats.rightInfectionArea);
 
 	SetDisplayKind(DisplayImageKind::InfectionOverlay);
 	AfxMessageBox(message);
@@ -896,20 +897,20 @@ void C大作业Doc::OnCalculateInfectionMetrics()
 	}
 
 	CMetricsCalculator calculator;
-	m_lastInfectionMetrics = calculator.Calculate(m_infectionSegmentationMask, m_infectionMask);
-	m_hasInfectionMetrics = TRUE;
+	CurrentSliceState().infectionMetrics = calculator.Calculate(CurrentSliceState().infectionSegmentationMask, m_infectionMask);
+	CurrentSliceState().hasInfectionMetrics = TRUE;
 
 	CString message;
 	message.Format(_T("感染区域 Dice / IoU:\r\n\r\nDice: %.4f\r\nIoU: %.4f\r\nPrecision: %.4f\r\nRecall: %.4f\r\nArea Error: %.4f\r\n\r\nTP: %lld\r\nFP: %lld\r\nTN: %lld\r\nFN: %lld"),
-		m_lastInfectionMetrics.dice,
-		m_lastInfectionMetrics.iou,
-		m_lastInfectionMetrics.precision,
-		m_lastInfectionMetrics.recall,
-		m_lastInfectionMetrics.areaError,
-		m_lastInfectionMetrics.tp,
-		m_lastInfectionMetrics.fp,
-		m_lastInfectionMetrics.tn,
-		m_lastInfectionMetrics.fn);
+		CurrentSliceState().infectionMetrics.dice,
+		CurrentSliceState().infectionMetrics.iou,
+		CurrentSliceState().infectionMetrics.precision,
+		CurrentSliceState().infectionMetrics.recall,
+		CurrentSliceState().infectionMetrics.areaError,
+		CurrentSliceState().infectionMetrics.tp,
+		CurrentSliceState().infectionMetrics.fp,
+		CurrentSliceState().infectionMetrics.tn,
+		CurrentSliceState().infectionMetrics.fn);
 	AfxMessageBox(message);
 }
 
@@ -940,7 +941,7 @@ void C大作业Doc::OnSaveCurrentResult()
 
 void C大作业Doc::OnExportMetricsCsv()
 {
-	if (!m_hasMetrics)
+	if (!CurrentSliceState().hasMetrics)
 	{
 		AfxMessageBox(_T("请先计算 Dice / IoU。"));
 		return;
@@ -953,7 +954,7 @@ void C大作业Doc::OnExportMetricsCsv()
 		return;
 	}
 
-	if (!CsvExporter::ExportMetrics(dlg.GetPathName().GetString(), GetSourceFileName(), m_lastMetrics))
+	if (!CsvExporter::ExportMetrics(dlg.GetPathName().GetString(), GetSourceFileName(), CurrentSliceState().metrics))
 	{
 		AfxMessageBox(_T("指标 CSV 导出失败。"));
 		return;
@@ -964,7 +965,7 @@ void C大作业Doc::OnExportMetricsCsv()
 
 void C大作业Doc::OnExportInfectionCsv()
 {
-	if (!m_hasInfectionStats)
+	if (!CurrentSliceState().hasInfectionStats)
 	{
 		AfxMessageBox(_T("请先完成感染负荷分析。"));
 		return;
@@ -977,7 +978,7 @@ void C大作业Doc::OnExportInfectionCsv()
 		return;
 	}
 
-	if (!CsvExporter::ExportInfectionStats(dlg.GetPathName().GetString(), GetSourceFileName(), m_lastInfectionStats))
+	if (!CsvExporter::ExportInfectionStats(dlg.GetPathName().GetString(), GetSourceFileName(), CurrentSliceState().infectionStats))
 	{
 		AfxMessageBox(_T("感染负荷 CSV 导出失败。"));
 		return;
@@ -989,8 +990,8 @@ void C大作业Doc::OnExportInfectionCsv()
 void C大作业Doc::OnPreprocessGrayNormalize()
 {
 	CPreprocessor preprocessor;
-	m_grayImage = preprocessor.MakeGray8(m_originalImage);
-	if (m_grayImage.empty())
+	CurrentSliceState().grayImage = preprocessor.MakeGray8(m_originalImage);
+	if (CurrentSliceState().grayImage.empty())
 	{
 		AfxMessageBox(_T("灰度/归一化处理失败。"));
 		return;
@@ -1002,8 +1003,8 @@ void C大作业Doc::OnPreprocessLungWindow()
 {
 	const AppConfig config = LoadConfigOrDefaults();
 	CPreprocessor preprocessor;
-	m_lungWindowImage = preprocessor.ApplyWindow(m_originalImage, config.preprocessing.lungWindowLevel, config.preprocessing.lungWindowWidth);
-	if (m_lungWindowImage.empty())
+	CurrentSliceState().lungWindowImage = preprocessor.ApplyWindow(m_originalImage, config.preprocessing.lungWindowLevel, config.preprocessing.lungWindowWidth);
+	if (CurrentSliceState().lungWindowImage.empty())
 	{
 		AfxMessageBox(_T("肺窗处理失败。"));
 		return;
@@ -1015,8 +1016,8 @@ void C大作业Doc::OnPreprocessGaussian()
 {
 	const AppConfig config = LoadConfigOrDefaults();
 	CPreprocessor preprocessor;
-	m_gaussianImage = preprocessor.ApplyGaussianBlur(m_originalImage, config.preprocessing.gaussianKernelSize);
-	if (m_gaussianImage.empty())
+	CurrentSliceState().gaussianImage = preprocessor.ApplyGaussianBlur(m_originalImage, config.preprocessing.gaussianKernelSize);
+	if (CurrentSliceState().gaussianImage.empty())
 	{
 		AfxMessageBox(_T("高斯滤波失败。"));
 		return;
@@ -1028,8 +1029,8 @@ void C大作业Doc::OnPreprocessMedian()
 {
 	const AppConfig config = LoadConfigOrDefaults();
 	CPreprocessor preprocessor;
-	m_medianImage = preprocessor.ApplyMedianBlur(m_originalImage, config.preprocessing.medianKernelSize);
-	if (m_medianImage.empty())
+	CurrentSliceState().medianImage = preprocessor.ApplyMedianBlur(m_originalImage, config.preprocessing.medianKernelSize);
+	if (CurrentSliceState().medianImage.empty())
 	{
 		AfxMessageBox(_T("中值滤波失败。"));
 		return;
@@ -1041,11 +1042,11 @@ void C大作业Doc::OnPreprocessClahe()
 {
 	const AppConfig config = LoadConfigOrDefaults();
 	CPreprocessor preprocessor;
-	m_claheImage = preprocessor.ApplyClahe(
+	CurrentSliceState().claheImage = preprocessor.ApplyClahe(
 		m_originalImage,
 		config.preprocessing.claheClipLimit,
 		cv::Size(config.preprocessing.claheTileGridSize, config.preprocessing.claheTileGridSize));
-	if (m_claheImage.empty())
+	if (CurrentSliceState().claheImage.empty())
 	{
 		AfxMessageBox(_T("CLAHE 对比度增强失败。"));
 		return;
@@ -1130,14 +1131,14 @@ void C大作业Doc::OnShowInfectionOverlay()
 
 void C大作业Doc::OnShowInfectionOverlaySeg()
 {
-	if (m_segmentationResult.finalMask.empty() || m_infectionSegmentationMask.empty())
+	if (CurrentSliceState().segmentationResult.finalMask.empty() || CurrentSliceState().infectionSegmentationMask.empty())
 	{
 		AfxMessageBox(_T("请先执行感染区域分割。"));
 		return;
 	}
 
 	CInfectionAnalyzer analyzer;
-	m_infectionOverlay = analyzer.MakeInfectionOverlay(m_originalImage, m_segmentationResult.finalMask, m_infectionSegmentationMask);
+	CurrentSliceState().infectionOverlay = analyzer.MakeInfectionOverlay(m_originalImage, CurrentSliceState().segmentationResult.finalMask, CurrentSliceState().infectionSegmentationMask);
 	SetDisplayKind(DisplayImageKind::InfectionOverlay);
 }
 
