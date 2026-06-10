@@ -31,7 +31,8 @@ enum class DisplayImageKind
 	MaskComparisonOverlay,
 	InfectionMask,
 	InfectionOverlay,
-	InfectionSegmentationMask
+	InfectionSegmentationMask,
+	InfectionComparisonOverlay
 };
 
 struct SliceState
@@ -44,6 +45,7 @@ struct SliceState
 	cv::Mat infectionSegmentationMask;
 	cv::Mat connectedColorMap;
 	cv::Mat maskComparisonOverlay;
+	cv::Mat infectionComparisonOverlay;
 	cv::Mat infectionOverlay;
 	LungSegmentationResult segmentationResult;
 	SegmentationMetrics metrics;
@@ -83,6 +85,7 @@ public:
 	BOOL HasMetrics() const;
 	BOOL HasInfectionStats() const;
 	BOOL HasInfectionMetrics() const;
+	BOOL HasInfectionComparisonOverlay() const;
 	BOOL HasVolume() const;
 	int GetVolumeDepth() const;
 	int GetCurrentSliceIndex() const;
@@ -174,6 +177,7 @@ protected:
 	afx_msg void OnShowInfectionOverlay();
 	afx_msg void OnShowInfectionOverlaySeg();
 	afx_msg void OnShowInfectionSegmentationMask();
+	afx_msg void OnShowInfectionComparisonOverlay();
 	afx_msg void OnPreviousSlice();
 	afx_msg void OnNextSlice();
 	afx_msg void OnBatchProcessCurrentVolume();
@@ -195,6 +199,7 @@ protected:
 	afx_msg void OnUpdateHasMetrics(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasInfectionStats(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHasInfectionMetrics(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateHasInfectionComparisonOverlay(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCanPreviousSlice(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCanNextSlice(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCanBatchProcessCurrentData(CCmdUI* pCmdUI);

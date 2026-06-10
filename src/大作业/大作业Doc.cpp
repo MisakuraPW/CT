@@ -120,6 +120,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnShowInfectionOverlay)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_OVERLAY_SEG, &C大作业Doc::OnShowInfectionOverlaySeg)
 	ON_COMMAND(ID_VIEW_SHOW_INFECTION_SEGMENTATION_MASK, &C大作业Doc::OnShowInfectionSegmentationMask)
+	ON_COMMAND(ID_VIEW_SHOW_INFECTION_COMPARISON, &C大作业Doc::OnShowInfectionComparisonOverlay)
 	ON_COMMAND(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnPreviousSlice)
 	ON_COMMAND(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnNextSlice)
 	ON_COMMAND(ID_BATCH_PROCESS_CURRENT_VOLUME, &C大作业Doc::OnBatchProcessCurrentVolume)
@@ -156,6 +157,7 @@ BEGIN_MESSAGE_MAP(C大作业Doc, CDocument)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_SEGMENTATION_MASK, &C大作业Doc::OnUpdateHasInfectionSegmentationMask)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_OVERLAY, &C大作业Doc::OnUpdateHasInfectionStats)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_OVERLAY_SEG, &C大作业Doc::OnUpdateHasInfectionSegmentationMask)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SHOW_INFECTION_COMPARISON, &C大作业Doc::OnUpdateHasInfectionComparisonOverlay)
 	ON_UPDATE_COMMAND_UI(ID_VOLUME_PREVIOUS_SLICE, &C大作业Doc::OnUpdateCanPreviousSlice)
 	ON_UPDATE_COMMAND_UI(ID_VOLUME_NEXT_SLICE, &C大作业Doc::OnUpdateCanNextSlice)
 	ON_UPDATE_COMMAND_UI(ID_BATCH_PROCESS_CURRENT_VOLUME, &C大作业Doc::OnUpdateCanBatchProcessCurrentData)
@@ -324,6 +326,8 @@ const cv::Mat& C大作业Doc::GetDisplayImage() const
 		return CurrentSliceState().infectionOverlay.empty() ? m_originalImage : CurrentSliceState().infectionOverlay;
 	case DisplayImageKind::InfectionSegmentationMask:
 		return CurrentSliceState().infectionSegmentationMask.empty() ? m_originalImage : CurrentSliceState().infectionSegmentationMask;
+	case DisplayImageKind::InfectionComparisonOverlay:
+		return CurrentSliceState().infectionComparisonOverlay.empty() ? m_originalImage : CurrentSliceState().infectionComparisonOverlay;
 	case DisplayImageKind::Original:
 	default:
 		return m_originalImage;
@@ -370,6 +374,8 @@ CString C大作业Doc::GetDisplayName() const
 		return prefix + _T("感染区域叠加图");
 	case DisplayImageKind::InfectionSegmentationMask:
 		return prefix + _T("感染分割 mask");
+	case DisplayImageKind::InfectionComparisonOverlay:
+		return prefix + _T("预测/人工感染 mask 对比叠加图");
 	case DisplayImageKind::Original:
 	default:
 		return prefix + _T("原始图像");
@@ -449,6 +455,11 @@ BOOL C大作业Doc::HasInfectionStats() const
 BOOL C大作业Doc::HasInfectionMetrics() const
 {
 	return CurrentSliceState().hasInfectionMetrics;
+}
+
+BOOL C大作业Doc::HasInfectionComparisonOverlay() const
+{
+	return !CurrentSliceState().infectionComparisonOverlay.empty();
 }
 
 BOOL C大作业Doc::HasVolume() const
@@ -606,6 +617,7 @@ BOOL C大作业Doc::LoadInfectionMask(const CString& pathName)
 	m_infectionMaskPath = pathName;
 	CurrentSliceState().hasInfectionStats = FALSE;
 	CurrentSliceState().infectionOverlay.release();
+	CurrentSliceState().infectionComparisonOverlay.release();
 	SetDisplayKind(DisplayImageKind::InfectionMask);
 	return TRUE;
 }
@@ -658,6 +670,7 @@ void C大作业Doc::ClearSliceDerivedResults()
 	CurrentSliceState().segmentationResult = LungSegmentationResult{};
 	CurrentSliceState().connectedColorMap.release();
 	CurrentSliceState().maskComparisonOverlay.release();
+	CurrentSliceState().infectionComparisonOverlay.release();
 	CurrentSliceState().infectionOverlay.release();
 	CurrentSliceState().infectionSegmentationMask.release();
 	CurrentSliceState().metrics = SegmentationMetrics{};
@@ -801,6 +814,7 @@ void C大作业Doc::OnSegmentInfection()
 	CurrentSliceState().hasInfectionStats = FALSE;
 	CurrentSliceState().hasInfectionMetrics = FALSE;
 	CurrentSliceState().infectionOverlay.release();
+	CurrentSliceState().infectionComparisonOverlay.release();
 	SetDisplayKind(DisplayImageKind::InfectionSegmentationMask);
 	AfxMessageBox(_T("感染区域分割完成。可在“视图”菜单查看感染 mask 和叠加图，\n也可在“分析”菜单执行感染负荷分析。"));
 }
@@ -901,6 +915,8 @@ void C大作业Doc::OnCalculateInfectionMetrics()
 
 	CMetricsCalculator calculator;
 	CurrentSliceState().infectionMetrics = calculator.Calculate(CurrentSliceState().infectionSegmentationMask, m_infectionMask);
+	COverlayVisualizer visualizer;
+	CurrentSliceState().infectionComparisonOverlay = visualizer.MakeComparisonOverlay(m_originalImage, CurrentSliceState().infectionSegmentationMask, m_infectionMask);
 	CurrentSliceState().hasInfectionMetrics = TRUE;
 
 	CString message;
@@ -1150,6 +1166,11 @@ void C大作业Doc::OnShowInfectionSegmentationMask()
 	SetDisplayKind(DisplayImageKind::InfectionSegmentationMask);
 }
 
+void C大作业Doc::OnShowInfectionComparisonOverlay()
+{
+	SetDisplayKind(DisplayImageKind::InfectionComparisonOverlay);
+}
+
 void C大作业Doc::OnPreviousSlice()
 {
 	if (!CanMoveToPreviousSlice())
@@ -1347,6 +1368,11 @@ void C大作业Doc::OnUpdateHasInfectionStats(CCmdUI* pCmdUI)
 void C大作业Doc::OnUpdateHasInfectionMetrics(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(CanCalculateInfectionMetrics());
+}
+
+void C大作业Doc::OnUpdateHasInfectionComparisonOverlay(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(HasInfectionComparisonOverlay());
 }
 
 void C大作业Doc::OnUpdateCanPreviousSlice(CCmdUI* pCmdUI)

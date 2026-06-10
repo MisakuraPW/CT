@@ -293,6 +293,7 @@ BEGIN
         MENUITEM "显示最终肺部 mask(&F)",         ID_VIEW_SHOW_FINAL_MASK
         MENUITEM "显示人工 mask(&A)",             ID_VIEW_SHOW_MANUAL_MASK
         MENUITEM "显示预测/人工对比图(&P)",        ID_VIEW_SHOW_MASK_COMPARISON
+        MENUITEM "显示预测/人工标注对比（感染区域mask）(&Q)", ID_VIEW_SHOW_INFECTION_COMPARISON
         MENUITEM "显示感染 mask(&I)",             ID_VIEW_SHOW_INFECTION_MASK
         MENUITEM "显示感染分割 mask(&K)",          ID_VIEW_SHOW_INFECTION_SEGMENTATION_MASK
         MENUITEM "显示感染叠加图(&V)",            ID_VIEW_SHOW_INFECTION_OVERLAY
@@ -638,6 +639,7 @@ BEGIN
     ID_VIEW_SHOW_FINAL_MASK "显示最终肺部 mask\n显示最终 mask"
     ID_VIEW_SHOW_MANUAL_MASK "显示人工 mask\n显示人工 mask"
     ID_VIEW_SHOW_MASK_COMPARISON "用绿色、蓝色和黄色显示预测 mask、人工 mask 与重叠区域\n显示预测/人工对比图"
+    ID_VIEW_SHOW_INFECTION_COMPARISON "用绿色、蓝色和黄色显示预测感染 mask、人工感染 mask 与重叠区域\n显示预测/人工标注对比（感染区域mask）"
     ID_IMAGE_OPEN_INFECTION_MASK "打开 COVID 感染区域 mask\n打开感染 mask"
     ID_ANALYSIS_INFECTION_BURDEN "计算感染面积、整体感染比例和左右肺感染比例\n感染负荷分析"
     ID_ANALYSIS_CALCULATE_INFECTION_METRICS "用感染分割 mask 和人工感染 mask 计算 Dice、IoU 等指标\n计算感染区域 Dice / IoU"
